@@ -38,7 +38,7 @@ contract LegitimatePhygitalNFTv3 is ERC721Royalty, ERC721Enumerable, AccessContr
     // until it has been unlocked by tapping the LGT tag and submitting the chip's signature to the API
     // this effectively turns the NFT into a semi soul bound NFT and prevents the NFT from being traded
     // without transferring the physical item to the new owner as well
-    bool public preventTransferWhenLocked = false;
+    bool public preventTransferWhenLocked = true;
 
     constructor() ERC721("LGTPhygitalNFTv3Example", "LGTNFTv3Example") {
       // contract deployer is the admin by default
