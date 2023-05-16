@@ -12,6 +12,7 @@ const OWNABLE_CALLER_IS_NOT_NFT_MANAGER = 'Caller does not have permission to ma
 const OWNABLE_CALLER_IS_NOT_RECOVERY = 'Caller does not have permission to recover NFTs'
 const OWNABLE_CALLER_IS_NOT_STATUS_MANAGER = 'Caller does not have permission to set the service status of this contract'
 const TOKEN_NOT_UNLOCKED = 'Please unlock your NFT by tapping the LGT Tag before transferring.'
+const NONEXISTANT_TOKEN = 'ERC721: owner query for nonexistent token'
 
 
 describe('LegitimatePhygitalNFTv3', () => {
@@ -397,7 +398,7 @@ describe('LegitimatePhygitalNFTv3', () => {
     describe('claim with transfer lock on', () => {
       it('API wallet can perform claim function and send NFT to Tap end consumer', async () => {
         await lgtNFT.setTransferLock(true)
-        const receiver = '0x0000000000000000000000000000000000000006'
+        const receiver = addr1.address
         await lgtNFT.claim(receiver, tokenId2)
 
         const owner = await lgtNFT.ownerOf(tokenId2)
@@ -405,6 +406,17 @@ describe('LegitimatePhygitalNFTv3', () => {
         const tokenLock = await lgtNFT.getTokenLock(tokenId2)
         expect(tokenLock).to.eq(false)
         await lgtNFT.setTransferLock(false)
+      })
+    })
+    describe('burn', () => {
+      it('owner can burn token', async () => {
+        const burnAddr = '0x0000000000000000000000000000000000000000'
+        let balance = await lgtNFT.balanceOf(addr1.address)
+        expect(balance).to.eq(3)
+        await lgtNFT.connect(addr1).burn(tokenId2)
+
+        balance = await lgtNFT.balanceOf(addr1.address)
+        expect(balance).to.eq(2)
       })
     })
   })
