@@ -5,9 +5,10 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Royalty.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
-contract LegitimatePhygitalNFTv3 is ERC721Royalty, ERC721Enumerable, AccessControl {
+contract LegitimatePhygitalNFTv3 is ERC721Royalty, ERC721Enumerable, AccessControl, ERC721Burnable {
     using Strings for uint256;
 
     // ROLES
@@ -205,7 +206,8 @@ contract LegitimatePhygitalNFTv3 is ERC721Royalty, ERC721Enumerable, AccessContr
       if (preventTransferWhenLocked == true &&
         from != address(0) && // is not minting token
         !(from == msg.sender && hasRole(API_DELEGATE_ROLE, msg.sender)) && // is not claiming token
-        !(to == msg.sender && hasRole(TOKEN_RECOVERY_ROLE, msg.sender)) // is not recovering token
+        !(to == msg.sender && hasRole(TOKEN_RECOVERY_ROLE, msg.sender)) && // is not recovering token
+        to != address(0) // is not burning token
         ) {
         require(!_getTokenLock(tokenId), "Please unlock your NFT by tapping the LGT Tag before transferring.");
       }
@@ -236,7 +238,7 @@ contract LegitimatePhygitalNFTv3 is ERC721Royalty, ERC721Enumerable, AccessContr
     function supportsInterface(bytes4 interfaceId)
     public
     view
-    override(ERC721Enumerable, ERC721Royalty, AccessControl)
+    override(ERC721Enumerable, ERC721Royalty, AccessControl, ERC721)
     returns (bool)
     {
         return super.supportsInterface(interfaceId);
