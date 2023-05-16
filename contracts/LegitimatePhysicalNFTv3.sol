@@ -33,6 +33,11 @@ contract LegitimatePhygitalNFTv3 is ERC721Royalty, ERC721Enumerable, AccessContr
     // can also be used to determine whether exclusive digital content is still active
     bool public isServiceActive = true;
 
+    // this governs the transfer lock functionality
+    // when the token is in a locked state after the transfer, the token cannot be transferred again
+    // until it has been unlocked by tapping the LGT tag and submitting the chip's signature to the API
+    // this effectively turns the NFT into a semi soul bound NFT and prevents the NFT from being traded
+    // without transferring the physical item to the new owner as well
     bool public preventTransferWhenLocked = false;
 
     constructor() ERC721("LGTPhygitalNFTv3Example", "LGTNFTv3Example") {
