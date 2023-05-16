@@ -1,11 +1,11 @@
-import { getAddressBook, getDeployerAddress } from './utils'
+import { getAddressBook } from './utils'
 
 async function main() {
   const addressBook = await getAddressBook()
 
   // @ts-expect-error
   await hre.run("verify:verify", {
-    address: addressBook.Contracts.LegitimatePhysicalNFTv3,
+    address: addressBook.Contracts.LegitimatePhygitalNFTv3,
     constructorArguments: []
   })
 }

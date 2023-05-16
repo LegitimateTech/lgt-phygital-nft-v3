@@ -2,7 +2,7 @@ import fs from 'fs'
 import { getNetworkName, getDeployerAddress } from './utils'
 import {ethers} from 'hardhat'
 
-const CONTRACT_NAME = "LegitimatePhysicalNFTv3"
+const CONTRACT_NAME = "LegitimatePhygitalNFTv3"
 
 async function main() {
   console.log(`Starting deployment script...`)
