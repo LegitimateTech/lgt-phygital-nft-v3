@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.2;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Royalty.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
-contract LegitimatePhysicalNFTv3 is ERC721Royalty, ERC721Enumerable, AccessControl {
+contract LegitimatePhygitalNFTv3 is ERC721Royalty, ERC721Enumerable, AccessControl {
     using Strings for uint256;
 
     // ROLES
@@ -25,15 +25,17 @@ contract LegitimatePhysicalNFTv3 is ERC721Royalty, ERC721Enumerable, AccessContr
     mapping(uint256 => bool) tokenLock;
 
     // METADATA
-    string baseURI = "https://metadata.legitimate.tech/example";
+    string public baseURI = "https://metadata.legitimate.tech/example";
 
-    // service status of this Physical NFT collection
+    // service status of this Phygital NFT collection
     // controls whether claiming functionality is still enabled
     // and whether transferred NFTs still lock and are unlockable by LGT
     // can also be used to determine whether exclusive digital content is still active
     bool public isServiceActive = true;
 
-    constructor() ERC721("LGTPhysicalNFTv3Example", "LGTNFTv3Example") {
+    bool public preventTransferWhenLocked = false;
+
+    constructor() ERC721("LGTPhygitalNFTv3Example", "LGTNFTv3Example") {
       // contract deployer is the admin by default
       _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
       // contract deployer can be granted some initial roles to start with
@@ -55,6 +57,10 @@ contract LegitimatePhysicalNFTv3 is ERC721Royalty, ERC721Enumerable, AccessContr
 
     function setBaseURI(string memory newURI) public onlyNftManager {
         baseURI = newURI;
+    }
+
+    function setTransferLock(bool lock) public onlyNftManager {
+      preventTransferWhenLocked = lock;
     }
 
     function setServiceStatus(bool status) public onlyServiceStatusManager {
@@ -191,7 +197,14 @@ contract LegitimatePhysicalNFTv3 is ERC721Royalty, ERC721Enumerable, AccessContr
     internal
     override(ERC721, ERC721Enumerable)
     {
-        super._beforeTokenTransfer(from, to, tokenId);
+      if (preventTransferWhenLocked == true &&
+        from != address(0) && // is not minting token
+        !(from == msg.sender && hasRole(API_DELEGATE_ROLE, msg.sender)) && // is not claiming token
+        !(to == msg.sender && hasRole(TOKEN_RECOVERY_ROLE, msg.sender)) // is not recovering token
+        ) {
+        require(!_getTokenLock(tokenId), "Please unlock your NFT by tapping the LGT Tag before transferring.");
+      }
+      super._beforeTokenTransfer(from, to, tokenId);
     }
 
     // This locking mechanism disencentivizes people from separately selling the NFT without the physical item

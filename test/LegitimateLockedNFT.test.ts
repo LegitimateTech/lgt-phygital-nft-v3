@@ -11,9 +11,10 @@ const OWNABLE_CALLER_IS_NOT_API_DELEGATE = 'Caller does not have permission to p
 const OWNABLE_CALLER_IS_NOT_NFT_MANAGER = 'Caller does not have permission to manage NFTs'
 const OWNABLE_CALLER_IS_NOT_RECOVERY = 'Caller does not have permission to recover NFTs'
 const OWNABLE_CALLER_IS_NOT_STATUS_MANAGER = 'Caller does not have permission to set the service status of this contract'
+const TOKEN_NOT_UNLOCKED = 'Please unlock your NFT by tapping the LGT Tag before transferring.'
 
 
-describe('LegitimatePhysicalNFTv3', () => {
+describe('LegitimatePhygitalNFTv3', () => {
   let contractAddress: string;
   let addr1: SignerWithAddress
   let lgtNFT: Contract;
@@ -23,7 +24,7 @@ describe('LegitimatePhysicalNFTv3', () => {
   const tokenId3 = '123456'
 
   before(async () => {
-    const LGTNFT = await ethers.getContractFactory("LegitimatePhysicalNFTv3");
+    const LGTNFT = await ethers.getContractFactory("LegitimatePhygitalNFTv3");
     lgtNFT = await LGTNFT.deploy();
     contractAddress = lgtNFT.address.toLowerCase()
     await lgtNFT.deployed();
@@ -39,7 +40,7 @@ describe('LegitimatePhysicalNFTv3', () => {
 
     it('has a name', async () => {
       const name = await lgtNFT.name();
-      expect(name).to.eq('LGTPhysicalNFTv3Example')
+      expect(name).to.eq('LGTPhygitalNFTv3Example')
     });
 
     it('has a symbol', async () => {
@@ -65,11 +66,13 @@ describe('LegitimatePhysicalNFTv3', () => {
       let owner = await lgtNFT.ownerOf(tokenId1)
       expect(owner).to.eq(deployerAddress)
     });
-    it('creates a new token with tokenId and initialOwner', async () => {
+    it('creates a new token with tokenId and initialOwner when transfer locked', async () => {
       const initialOwner = await addr1.getAddress()
+      await lgtNFT.setTransferLock(true)
       const tx = await lgtNFT['mint(uint256,address)'](tokenId2, initialOwner);
       const txReceipt = await tx.wait()
       const totalSupply = await lgtNFT.totalSupply();
+      await lgtNFT.setTransferLock(false)
 
       //SUCCESS
       expect(totalSupply.toNumber()).to.eq(2)
@@ -131,9 +134,9 @@ describe('LegitimatePhysicalNFTv3', () => {
     })
   })
   //
-  describe('transfering', async () => {
+  describe('transferring', async () => {
     it('transfer a token from one address to another', async () => {
-      const receivingAddress = '0x0000000000000000000000000000000000000006'
+      const receivingAddress = addr1.address
       const tx = await lgtNFT.transferFrom(deployerAddress, receivingAddress, tokenId1);
       const txReceipt = await tx.wait()
 
@@ -144,6 +147,29 @@ describe('LegitimatePhysicalNFTv3', () => {
       expect(event.to).to.eq(receivingAddress, 'to is correct')
       const owner = await lgtNFT.ownerOf(tokenId1);
       expect(owner, receivingAddress);
+    });
+  });
+  //
+  describe('transferring token with lock states', async () => {
+    it('transfer a token from one address to another', async () => {
+      const receivingAddress = '0x0000000000000000000000000000000000000006'
+      await lgtNFT.setTransferLock(true)
+      // address without API_DELEGATE permission should not be able to transfer locked NFT when transfer lock is set
+      await expect(lgtNFT.connect(addr1).transferFrom(addr1.address, receivingAddress, tokenId1)).to.be.revertedWith(TOKEN_NOT_UNLOCKED);
+
+      await lgtNFT.setTokenLock(tokenId1, false)
+      const tx = await lgtNFT.connect(addr1).transferFrom(addr1.address, receivingAddress, tokenId1);
+      const txReceipt = await tx.wait()
+
+      //SUCCESS
+      const event = txReceipt.events[1].args;
+      expect(event.tokenId.toString()).to.eq(tokenId1, 'id is correct');
+      expect(event.from).to.eq(addr1.address, 'from is correct');
+      expect(event.to).to.eq(receivingAddress, 'to is correct')
+      const owner = await lgtNFT.ownerOf(tokenId1);
+      expect(owner, receivingAddress);
+      // reset transfer lock
+      await lgtNFT.setTransferLock(false)
     });
   });
   //
@@ -337,6 +363,26 @@ describe('LegitimatePhysicalNFTv3', () => {
         expect(owner).to.eq(deployerAddress)
       })
     })
+    describe('recoverToken should work with transfer lock on', () => {
+      it('admin recovers token from another address', async () => {
+        let owner = await lgtNFT.ownerOf(tokenId2)
+        expect(owner).to.not.eq(deployerAddress)
+
+        await lgtNFT.grantRole(keccak256(toUtf8Bytes('TOKEN_RECOVERY_USER')), await addr1.getAddress())
+
+        // token lock on
+        await lgtNFT.setTransferLock(true)
+        await lgtNFT.connect(addr1).recoverToken(tokenId2)
+        owner = await lgtNFT.ownerOf(tokenId2)
+        expect(owner).to.eq(addr1.address)
+        await lgtNFT.setTransferLock(false)
+
+        // token lock off
+        await lgtNFT.recoverToken(tokenId2)
+        owner = await lgtNFT.ownerOf(tokenId2)
+        expect(owner).to.eq(deployerAddress)
+      })
+    })
     describe('claim', () => {
       it('API wallet can perform claim function and send NFT to Tap end consumer', async () => {
         const receiver = '0x0000000000000000000000000000000000000006'
@@ -346,6 +392,19 @@ describe('LegitimatePhysicalNFTv3', () => {
         expect(owner).to.eq(receiver)
         const tokenLock = await lgtNFT.getTokenLock(tokenId1)
         expect(tokenLock).to.eq(false)
+      })
+    })
+    describe('claim with transfer lock on', () => {
+      it('API wallet can perform claim function and send NFT to Tap end consumer', async () => {
+        await lgtNFT.setTransferLock(true)
+        const receiver = '0x0000000000000000000000000000000000000006'
+        await lgtNFT.claim(receiver, tokenId2)
+
+        const owner = await lgtNFT.ownerOf(tokenId2)
+        expect(owner).to.eq(receiver)
+        const tokenLock = await lgtNFT.getTokenLock(tokenId2)
+        expect(tokenLock).to.eq(false)
+        await lgtNFT.setTransferLock(false)
       })
     })
   })
