@@ -199,7 +199,7 @@ contract LegitimatePhygitalNFTv3 is ERC721Royalty, ERC721Enumerable, AccessContr
     }
 
     // The following functions are overrides required by Solidity.
-    function _beforeTokenTransfer(address from, address to, uint256 tokenId)
+    function _beforeTokenTransfer(address from, address to, uint256 tokenId, uint256 batchSize)
     internal
     override(ERC721, ERC721Enumerable)
     {
@@ -211,7 +211,7 @@ contract LegitimatePhygitalNFTv3 is ERC721Royalty, ERC721Enumerable, AccessContr
         ) {
         require(!_getTokenLock(tokenId), "Please unlock your NFT by tapping the LGT Tag before transferring.");
       }
-      super._beforeTokenTransfer(from, to, tokenId);
+      super._beforeTokenTransfer(from, to, tokenId, batchSize);
     }
 
     // This locking mechanism disencentivizes people from separately selling the NFT without the physical item
@@ -219,8 +219,8 @@ contract LegitimatePhygitalNFTv3 is ERC721Royalty, ERC721Enumerable, AccessContr
     // and verified by LGT's servers. Since the unlock is done by LGT, the transaction is gasless for end users
     // and the gas is paid by Legitimate as part of the ongoing service contract.
     // Exclusive content and other experiences can also be gated behind this lock mechanism as well.
-    function _afterTokenTransfer(address from, address to, uint256 tokenId) override(ERC721) internal {
-      super._afterTokenTransfer(from, to, tokenId);
+    function _afterTokenTransfer(address from, address to, uint256 tokenId, uint256 batchSize) override(ERC721) internal {
+      super._afterTokenTransfer(from, to, tokenId, batchSize);
       _setTokenLock(tokenId, true);
     }
 
