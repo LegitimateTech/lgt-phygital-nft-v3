@@ -142,7 +142,7 @@ describe('LegitimatePhygitalNFTv3', () => {
       const txReceipt = await tx.wait()
 
       //SUCCESS
-      const event = txReceipt.events[1].args;
+      const event = txReceipt.events[0].args;
       expect(event.tokenId.toString()).to.eq(tokenId1, 'id is correct');
       expect(event.from).to.eq(deployerAddress, 'from is correct');
       expect(event.to).to.eq(receivingAddress, 'to is correct')
@@ -163,7 +163,7 @@ describe('LegitimatePhygitalNFTv3', () => {
       const txReceipt = await tx.wait()
 
       //SUCCESS
-      const event = txReceipt.events[1].args;
+      const event = txReceipt.events[0].args;
       expect(event.tokenId.toString()).to.eq(tokenId1, 'id is correct');
       expect(event.from).to.eq(addr1.address, 'from is correct');
       expect(event.to).to.eq(receivingAddress, 'to is correct')
