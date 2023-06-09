@@ -9,6 +9,7 @@
   "dependencies": {
     "@openzeppelin/contracts": "^4.7.3",
     "dotenv": "^8.2.0",
+    "erc721psi": "^0.7.0",
     "hardhat": "^2.13.0"
   },
   "scripts": {
