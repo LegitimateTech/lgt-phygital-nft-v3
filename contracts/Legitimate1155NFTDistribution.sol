@@ -28,10 +28,7 @@ contract Legitimate1155NFTDistribution is ERC1155, AccessControl {
         return totalSupply(id) > 0;
     }
 
-    /**
-     * @dev Total amount of tokens in the entire ERC1155 collection.
-     */
-    function collectionSupply() public view returns (uint256) {
+    function totalSupply() public view returns (uint256) {
         return _collectionSupply;
     }
 
