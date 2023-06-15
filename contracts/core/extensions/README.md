@@ -2,6 +2,10 @@
 
 This directory contains contracts that are designed by the Legitimate team to
 extend the functionality and real-world applicability of the LockedNFT protocol.
+Although we recommend extending and using these contracts as they are, we
+recognize that not every project will have the same role-based and service
+requirements that Legitimate operates under. As such, we have provided these
+contracts under the `/extensions` directory as an alternate option.
 
 ## LGTAccessControl
 
