@@ -50,18 +50,16 @@ abstract contract LGTServiced721Psi is LGTAccessControl, Locked721Psi {
     }
 
     // MINTING FUNCTIONS
-    function mint(uint256 tokenId) public onlyNftManager {
-      _safeMint(msg.sender, tokenId);
+    function mint() public onlyNftManager {
+      _safeMint(msg.sender, 1);
     }
 
-    function mint(uint256 tokenId, address to) public onlyNftManager {
-      _safeMint(to, tokenId);
+    function mint(address to) public onlyNftManager {
+      _safeMint(to, 1);
     }
 
-    function batchMint(uint256 startTokenId, uint256 endTokenId, address to) public onlyNftManager {
-      for (uint256 i = startTokenId; i <= endTokenId; i++) {
-        _safeMint(to, i);
-      }
+    function mint(address to, uint256 quantity) public onlyNftManager {
+      _safeMint(to, quantity);
     }
 
     // only prevent token transfers if the preventTransferWhenLocked flag is set to true
