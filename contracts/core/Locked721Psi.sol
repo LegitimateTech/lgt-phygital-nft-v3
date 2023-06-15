@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.2;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "erc721psi/contracts/ERC721Psi.sol";
 import "./Locked721Base.sol";
 
-abstract contract Locked721 is ERC721, Locked721Base {
+abstract contract Locked721Psi is ERC721Psi, Locked721Base {
     // @todo: is not gas optimized since _afterTokenTransfer sets lock = true and then this sets lock = false
     // This is used for end users to claim NFTs minted to our delegate wallet and makes the claim activation gasless for end users
     // the delegate wallet performing the claim functionality needs to own the NFT
@@ -16,13 +16,13 @@ abstract contract Locked721 is ERC721, Locked721Base {
       _setTokenLock(tokenId, false);
     }
 
-    function _beforeTokenTransfer(address from, address to, uint256 tokenId, uint256 batchSize)
+    function _beforeTokenTransfers(address from, address to, uint256 startTokenId, uint256 quantity)
     internal
     virtual
-    override(ERC721)
+    override(ERC721Psi)
     {
-      require(!_shouldPreventTokenTransfer(from, to, tokenId, batchSize), "Please unlock your NFT by tapping the LGT Tag before transferring.");
-      super._beforeTokenTransfer(from, to, tokenId, batchSize);
+      require(!_shouldPreventTokenTransfer(from, to, startTokenId, quantity), "Please unlock your NFT by tapping the LGT Tag before transferring.");
+      super._beforeTokenTransfers(from, to, startTokenId, quantity);
     }
 
     // This locking mechanism disencentivizes people from separately selling the NFT without the physical item
@@ -30,8 +30,8 @@ abstract contract Locked721 is ERC721, Locked721Base {
     // and verified by LGT's servers. Since the unlock is done by LGT, the transaction is gasless for end users
     // and the gas is paid by Legitimate as part of the ongoing service contract.
     // Exclusive content and other experiences can also be gated behind this lock mechanism as well.
-    function _afterTokenTransfer(address from, address to, uint256 startTokenId, uint256 quantity) override(ERC721) internal virtual {
-      super._afterTokenTransfer(from, to, startTokenId, quantity);
+    function _afterTokenTransfers(address from, address to, uint256 startTokenId, uint256 quantity) override(ERC721Psi) internal virtual {
+      super._afterTokenTransfers(from, to, startTokenId, quantity);
       _lockTokensAfterTransfer(from, to, startTokenId, quantity);
     }
 
@@ -40,9 +40,9 @@ abstract contract Locked721 is ERC721, Locked721Base {
     public
     view
     virtual
-    override(ERC721, AccessControl)
+    override(ERC721Psi, AccessControl)
     returns (bool)
     {
-      return ERC721.supportsInterface(interfaceId) || AccessControl.supportsInterface(interfaceId);
+      return ERC721Psi.supportsInterface(interfaceId) || AccessControl.supportsInterface(interfaceId);
     }
 }

@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.2;
 
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "./Locked721.sol";
 import "./LGTAccessControl.sol";
 
-abstract contract LGTLocked721 is Locked721, LGTAccessControl {
+abstract contract LGTServiced721 is LGTAccessControl, Locked721 {
     using Strings for uint256;
 
     // service status of this Phygital NFT collection
@@ -57,26 +58,19 @@ abstract contract LGTLocked721 is Locked721, LGTAccessControl {
       _safeMint(to, tokenId);
     }
 
-    function batchMint(uint256 startTokenId, uint256 endTokenId, address to, bool locked) public onlyNftManager {
+    function batchMint(uint256 startTokenId, uint256 endTokenId, address to) public onlyNftManager {
       for (uint256 i = startTokenId; i <= endTokenId; i++) {
         _safeMint(to, i);
-      }
-
-      // @todo: there's probably a more gas efficient way to do this, but this is fine for now
-      if (locked == false) {
-        for (uint256 i = startTokenId; i <= endTokenId; i++) {
-          _setTokenLock(i, false);
-        }
       }
     }
 
     // only prevent token transfers if the preventTransferWhenLocked flag is set to true
     // if the token is being recovered, also bypass the token transfer prevention
-    function _shouldPreventTokenTransfer (address from, address to, uint256 tokenId) internal override view returns (bool) {
+    function _shouldPreventTokenTransfer (address from, address to, uint256 startTokenId, uint256 batchSize) internal override view returns (bool) {
         return 
         preventTransferWhenLocked == true && // flag for preventing transfers if locked
         !(to == msg.sender && hasRole(TOKEN_RECOVERY_ROLE, msg.sender)) && // txn sender is not recovering token
-        super._shouldPreventTokenTransfer(from, to, tokenId);
+        super._shouldPreventTokenTransfer(from, to, startTokenId, batchSize);
     }
 
     // TOKEN RECOVERY FUNCTIONS
@@ -96,6 +90,6 @@ abstract contract LGTLocked721 is Locked721, LGTAccessControl {
     override(Locked721, AccessControl)
     returns (bool)
     {
-      return Locked721.supportsInterface(interfaceId);
+      return super.supportsInterface(interfaceId);
     }
 }
