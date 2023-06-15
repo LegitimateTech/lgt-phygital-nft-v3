@@ -2,7 +2,7 @@
 pragma solidity ^0.8.2;
 
 import "erc721psi/contracts/ERC721Psi.sol";
-import "./Locked721Base.sol";
+import "./base/Locked721Base.sol";
 
 abstract contract Locked721Psi is ERC721Psi, Locked721Base {
     // @todo: is not gas optimized since _afterTokenTransfer sets lock = true and then this sets lock = false
