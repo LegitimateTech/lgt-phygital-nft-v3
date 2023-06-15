@@ -2,10 +2,10 @@
 pragma solidity ^0.8.2;
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "./Locked721.sol";
+import "../Locked721Psi.sol";
 import "./LGTAccessControl.sol";
 
-abstract contract LGTServiced721 is LGTAccessControl, Locked721 {
+abstract contract LGTServiced721Psi is LGTAccessControl, Locked721Psi {
     using Strings for uint256;
 
     // service status of this Phygital NFT collection
@@ -50,18 +50,16 @@ abstract contract LGTServiced721 is LGTAccessControl, Locked721 {
     }
 
     // MINTING FUNCTIONS
-    function mint(uint256 tokenId) public onlyNftManager {
-      _safeMint(msg.sender, tokenId);
+    function mint() public onlyNftManager {
+      _safeMint(msg.sender, 1);
     }
 
-    function mint(uint256 tokenId, address to) public onlyNftManager {
-      _safeMint(to, tokenId);
+    function mint(address to) public onlyNftManager {
+      _safeMint(to, 1);
     }
 
-    function mint(uint256 startTokenId, uint256 endTokenId, address to) public onlyNftManager {
-      for (uint256 i = startTokenId; i <= endTokenId; i++) {
-        _safeMint(to, i);
-      }
+    function mint(address to, uint256 quantity) public onlyNftManager {
+      _safeMint(to, quantity);
     }
 
     // only prevent token transfers if the preventTransferWhenLocked flag is set to true
@@ -87,7 +85,7 @@ abstract contract LGTServiced721 is LGTAccessControl, Locked721 {
     public
     view
     virtual
-    override(Locked721, AccessControl)
+    override(Locked721Psi, AccessControl)
     returns (bool)
     {
       return super.supportsInterface(interfaceId);

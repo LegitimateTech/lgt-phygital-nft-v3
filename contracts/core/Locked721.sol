@@ -2,7 +2,7 @@
 pragma solidity ^0.8.2;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "./Locked721Base.sol";
+import "./base/Locked721Base.sol";
 
 abstract contract Locked721 is ERC721, Locked721Base {
     // @todo: is not gas optimized since _afterTokenTransfer sets lock = true and then this sets lock = false
