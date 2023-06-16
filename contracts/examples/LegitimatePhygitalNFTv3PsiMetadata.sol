@@ -2,7 +2,7 @@
 pragma solidity ^0.8.2;
 
 import "@openzeppelin/contracts/utils/Strings.sol";
-import "contracts/LockedNFT/core/extensions/LGTServiced721Psi.sol";
+import "contracts/LockedNFT/extensions/LGTServiced721Psi.sol";
 import "./LegitimateNFTMetadata.sol";
 
 contract LegitimatePhygitalNFTv3PsiMetadata is LegitimateNFTMetadata, LGTServiced721Psi {
