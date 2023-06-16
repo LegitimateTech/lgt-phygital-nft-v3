@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.2;
 
+import "./ILocked721Base.sol";
 import "./Locked721AccessControl.sol";
 
-abstract contract Locked721Base is Locked721AccessControl {
+abstract contract Locked721Base is ILocked721Base, Locked721AccessControl {
     // stores the locked state for each NFT
     mapping(uint256 => bool) tokenLock;
 
@@ -22,7 +23,7 @@ abstract contract Locked721Base is Locked721AccessControl {
       tokenLock[tokenId] = locked;
     }
 
-    function setTokenLock(uint256 tokenId, bool locked) public onlyApiDelegate {
+    function setTokenLock(uint256 tokenId, bool locked) override external onlyApiDelegate {
       _setTokenLock(tokenId, locked);
     }
 
@@ -31,7 +32,7 @@ abstract contract Locked721Base is Locked721AccessControl {
       return tokenLock[tokenId];
     }
 
-    function getTokenLock(uint256 tokenId) public view returns (bool) {
+    function getTokenLock(uint256 tokenId) override external view returns (bool) {
       return _getTokenLock(tokenId);
     }
 
@@ -66,5 +67,5 @@ abstract contract Locked721Base is Locked721AccessControl {
     // This is used for end users to claim NFTs minted to our delegate wallet and makes the claim activation gasless for end users
     // the delegate wallet performing the claim functionality needs to own the NFT
     // we check the ownership information on our API service used by Tap
-    function claim(address to, uint256 tokenId) virtual public onlyApiDelegate {}
+    function claim(address to, uint256 tokenId) override virtual external onlyApiDelegate {}
 }
