@@ -4,8 +4,8 @@ pragma solidity ^0.8.2;
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-import "contracts/core/extensions/LGTServiced721.sol";
-import "contracts/core/extensions/LGTNFTRoyalty.sol";
+import "contracts/LockedNFT/core/extensions/LGTServiced721.sol";
+import "contracts/LockedNFT/core/extensions/LGTNFTRoyalty.sol";
 
 contract LegitimatePhygitalNFTv3 is LGTServiced721, LGTNFTRoyalty, ERC721Burnable, ERC721Enumerable {
     using Strings for uint256;
