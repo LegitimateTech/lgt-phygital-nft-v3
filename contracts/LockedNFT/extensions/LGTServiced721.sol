@@ -54,13 +54,9 @@ abstract contract LGTServiced721 is LGTAccessControl, Locked721 {
       _safeMint(msg.sender, tokenId);
     }
 
-    function mint(uint256 tokenId, address to) public onlyNftManager {
-      _safeMint(to, tokenId);
-    }
-
-    function mint(uint256 startTokenId, uint256 endTokenId, address to) public onlyNftManager {
-      for (uint256 i = startTokenId; i <= endTokenId; i++) {
-        _safeMint(to, i);
+    function mint(address to, uint256 startTokenId, uint256 quantity) public onlyNftManager {
+      for (uint256 i = 0; i < quantity; i++) {
+        _safeMint(to, startTokenId + i);
       }
     }
 

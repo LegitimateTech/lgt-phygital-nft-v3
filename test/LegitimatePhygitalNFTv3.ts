@@ -70,7 +70,7 @@ describe('LegitimatePhygitalNFTv3', () => {
     it('creates a new token with tokenId and initialOwner when transfer locked', async () => {
       const initialOwner = await addr1.getAddress()
       await lgtNFT.setTransferLock(true)
-      const tx = await lgtNFT['mint(uint256,address)'](tokenId2, initialOwner);
+      const tx = await lgtNFT['mint(address,uint256,uint256)'](initialOwner, tokenId2, 1);
       const txReceipt = await tx.wait()
       const totalSupply = await lgtNFT.totalSupply();
       await lgtNFT.setTransferLock(false)
@@ -108,32 +108,52 @@ describe('LegitimatePhygitalNFTv3', () => {
       expect(royaltyFee).to.eq(salePrice * feeNumerator / 10000)
     });
     it('batch mints NFTs', async () => {
-      const tx = await lgtNFT['mint(uint256,uint256,address)'](1, 3, deployerAddress);
+      const startingTokenId = Number.parseInt(tokenId3) + 1;
+      const tx = await lgtNFT['mint(address,uint256,uint256)'](deployerAddress, startingTokenId, 3);
       const txReceipt = await tx.wait()
 
       const totalSupply = await lgtNFT.totalSupply();
       expect(totalSupply.toNumber()).to.eq(6)
-      const tokenLock1 = await lgtNFT.getTokenLock(1)
-      expect(tokenLock1).to.eq(true)
-      const tokenLock2 = await lgtNFT.getTokenLock(2)
-      expect(tokenLock2).to.eq(true)
-      const tokenLock3 = await lgtNFT.getTokenLock(3)
-      expect(tokenLock3).to.eq(true)
-      const owner = await lgtNFT.ownerOf(1);
-      expect(owner, deployerAddress);
+
+      const events = txReceipt.events
+      expect(events.length).to.eq(3)
+
+      for (let i = 0;i<events.length;i++) {
+        const { tokenId, from, to } = events[i].args
+        const expectedTokenId = startingTokenId + i
+        expect(tokenId).to.eq(expectedTokenId, 'id is correct')
+        expect(from).to.eq(ORIGIN_ADDRESS, 'from is correct')
+        expect(to).to.eq(deployerAddress, 'to is correct')
+        const tokenLock = await lgtNFT.getTokenLock(tokenId)
+        expect(tokenLock).to.eq(true)
+        const owner = await lgtNFT.ownerOf(tokenId)
+        expect(owner, deployerAddress)
+      }
     })
-    it('batch mints unlocked NFTs to different address', async () => {
-      const tx = await lgtNFT['mint(uint256,uint256,address)'](4, 5, deployerAddress);
+    it('minting NFTs with flag shouldLockTokensAfterMint set to false', async () => {
+      const startingTokenId = Number.parseInt(tokenId3) + 3 + 1;
+      await lgtNFT.setShouldLockTokensAfterMint(false);
+      const mintToAddress = await addr1.getAddress()
+      const tx = await lgtNFT['mint(address,uint256,uint256)'](mintToAddress, startingTokenId, 2);
       const txReceipt = await tx.wait()
 
       const totalSupply = await lgtNFT.totalSupply();
       expect(totalSupply.toNumber()).to.eq(8)
-      const tokenLock4 = await lgtNFT.getTokenLock(4)
-      expect(tokenLock4).to.eq(true)
-      const tokenLock5 = await lgtNFT.getTokenLock(5)
-      expect(tokenLock5).to.eq(true)
-      const owner = await lgtNFT.ownerOf(4);
-      expect(owner, await addr1.getAddress());
+
+      const events = txReceipt.events
+      expect(events.length).to.eq(2)
+
+      for (let i = 0;i<events.length;i++) {
+        const { tokenId, from, to } = events[i].args
+        const expectedTokenId = startingTokenId + i
+        expect(tokenId).to.eq(expectedTokenId, 'id is correct')
+        expect(from).to.eq(ORIGIN_ADDRESS, 'from is correct')
+        expect(to).to.eq(mintToAddress, 'to is correct')
+        const tokenLock = await lgtNFT.getTokenLock(tokenId)
+        expect(tokenLock).to.eq(false)
+      }
+      // resets
+      await lgtNFT.setShouldLockTokensAfterMint(true);
     })
   })
   //
@@ -415,11 +435,11 @@ describe('LegitimatePhygitalNFTv3', () => {
       it('owner can burn token', async () => {
         const burnAddr = '0x0000000000000000000000000000000000000000'
         let balance = await lgtNFT.balanceOf(addr1.address)
-        expect(balance).to.eq(1)
+        expect(balance).to.eq(3)
         await lgtNFT.connect(addr1).burn(tokenId2)
 
         balance = await lgtNFT.balanceOf(addr1.address)
-        expect(balance).to.eq(0)
+        expect(balance).to.eq(2)
       })
     })
   })
