@@ -8,7 +8,15 @@ abstract contract Locked721Base is ILocked721Base, Locked721AccessControl {
     // stores the locked state for each NFT
     mapping(uint256 => bool) tokenLock;
 
+    // 
     bool private shouldLockTokensAfterMint = true;
+
+    // this governs the transfer lock functionality
+    // when the token is in a locked state after the transfer, the token cannot be transferred again
+    // until it has been unlocked by tapping the LGT tag and submitting the chip's signature to the API
+    // this effectively turns the NFT into a semi soul bound NFT and prevents the NFT from being traded
+    // without transferring the physical item to the new owner as well
+    bool private shouldPreventTransferWhenLocked = true;
 
     constructor() {
       // contract deployer is the admin by default
@@ -18,6 +26,14 @@ abstract contract Locked721Base is ILocked721Base, Locked721AccessControl {
 
       // set default admin as the manager of claim and unlock delegate roles
       _setRoleAdmin(API_DELEGATE_ROLE, DEFAULT_ADMIN_ROLE);
+    }
+
+    function setShouldPreventTransferWhenLocked(bool lock) external onlyAdmin {
+      shouldPreventTransferWhenLocked = lock;
+    }
+
+    function getShouldPreventTransferWhenLocked() external returns (bool) {
+      return shouldPreventTransferWhenLocked;
     }
 
     // TOKENLOCK FUNCTIONS
@@ -52,7 +68,9 @@ abstract contract Locked721Base is ILocked721Base, Locked721AccessControl {
     // or the token is being burned 
     function _shouldPreventTokenTransfer (address from, address to, uint256 startTokenId, uint256 batchSize) internal virtual view returns (bool) {
       // do not prevent token transfer if:
-      if (from == address(0) || // token is being minted
+      if (
+        !shouldPreventTransferWhenLocked || // flag for preventing token transfers
+        from == address(0) || // token is being minted
         (from == msg.sender && hasRole(API_DELEGATE_ROLE, msg.sender)) || // transfer is being initiated by API_DELEGATE_ROLE
         to == address(0) // token is being burned
       ) {

@@ -68,11 +68,11 @@ describe('LegitimatePhygitalNFTv3Psi', () => {
     });
     it('mints a new token to a separate initial owner.', async () => {
       const initialOwner = await addr1.getAddress()
-      await lgtNFT.setTransferLock(true)
+      await lgtNFT.setShouldPreventTransferWhenLocked(true)
       const tx = await lgtNFT['mint(address)'](initialOwner);
       const txReceipt = await tx.wait()
       const totalSupply = await lgtNFT.totalSupply();
-      await lgtNFT.setTransferLock(false)
+      await lgtNFT.setShouldPreventTransferWhenLocked(false)
 
       //SUCCESS
       expect(totalSupply.toNumber()).to.eq(2)
@@ -153,7 +153,7 @@ describe('LegitimatePhygitalNFTv3Psi', () => {
     describe('transferring token with lock states', async () => {
       it('transfer a token from one address to another', async () => {
         const receivingAddress = '0x0000000000000000000000000000000000000006'
-        await lgtNFT.setTransferLock(true)
+        await lgtNFT.setShouldPreventTransferWhenLocked(true)
         // address without API_DELEGATE permission should not be able to transfer locked NFT when transfer lock is set
         await expect(lgtNFT.connect(addr1).transferFrom(addr1.address, receivingAddress, tokenId1)).to.be.revertedWith(TOKEN_NOT_UNLOCKED);
 
@@ -169,7 +169,7 @@ describe('LegitimatePhygitalNFTv3Psi', () => {
         const owner = await lgtNFT.ownerOf(tokenId1);
         expect(owner, receivingAddress);
         // reset transfer lock
-        await lgtNFT.setTransferLock(false)
+        await lgtNFT.setShouldPreventTransferWhenLocked(false)
       });
     });
     //
@@ -296,11 +296,11 @@ describe('LegitimatePhygitalNFTv3Psi', () => {
         await lgtNFT.grantRole(keccak256(toUtf8Bytes('TOKEN_RECOVERY_USER')), await addr1.getAddress())
 
         // token lock on
-        await lgtNFT.setTransferLock(true)
+        await lgtNFT.setShouldPreventTransferWhenLocked(true)
         await lgtNFT.connect(addr1).recoverToken(tokenId2)
         owner = await lgtNFT.ownerOf(tokenId2)
         expect(owner).to.eq(addr1.address)
-        await lgtNFT.setTransferLock(false)
+        await lgtNFT.setShouldPreventTransferWhenLocked(false)
 
         // token lock off
         await lgtNFT.recoverToken(tokenId2)
@@ -321,7 +321,7 @@ describe('LegitimatePhygitalNFTv3Psi', () => {
     })
     describe('claim with transfer lock on', () => {
       it('API wallet can perform claim function and send NFT to Tap end consumer', async () => {
-        await lgtNFT.setTransferLock(true)
+        await lgtNFT.setShouldPreventTransferWhenLocked(true)
         const receiver = addr1.address
         await lgtNFT.claim(receiver, tokenId2)
 
@@ -329,7 +329,7 @@ describe('LegitimatePhygitalNFTv3Psi', () => {
         expect(owner).to.eq(receiver)
         const tokenLock = await lgtNFT.getTokenLock(tokenId2)
         expect(tokenLock).to.eq(false)
-        await lgtNFT.setTransferLock(false)
+        await lgtNFT.setShouldPreventTransferWhenLocked(false)
       })
     })
   })
