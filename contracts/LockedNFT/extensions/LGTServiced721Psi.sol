@@ -12,14 +12,7 @@ abstract contract LGTServiced721Psi is LGTAccessControl, Locked721Psi {
     // controls whether claiming functionality is still enabled
     // and whether transferred NFTs still lock and are unlockable by LGT
     // can also be used to determine whether exclusive digital content is still active
-    bool public isServiceActive = true;
-
-    // this governs the transfer lock functionality
-    // when the token is in a locked state after the transfer, the token cannot be transferred again
-    // until it has been unlocked by tapping the LGT tag and submitting the chip's signature to the API
-    // this effectively turns the NFT into a semi soul bound NFT and prevents the NFT from being traded
-    // without transferring the physical item to the new owner as well
-    bool public preventTransferWhenLocked = true;
+    bool private isServiceActive = true;
 
     constructor() {
       _setupRole(NFT_MANAGER_ROLE, msg.sender);
@@ -30,10 +23,6 @@ abstract contract LGTServiced721Psi is LGTAccessControl, Locked721Psi {
       _setRoleAdmin(SERVICE_STATUS_ROLE, DEFAULT_ADMIN_ROLE);
       // @IMPORTANT: Comment out the line below if token recovery is not needed
       _setRoleAdmin(TOKEN_RECOVERY_ROLE, DEFAULT_ADMIN_ROLE);
-    }
-
-    function setTransferLock(bool lock) public onlyNftManager {
-      preventTransferWhenLocked = lock;
     }
 
     function setServiceStatus(bool status) public onlyServiceStatusManager {
@@ -66,7 +55,7 @@ abstract contract LGTServiced721Psi is LGTAccessControl, Locked721Psi {
     // if the token is being recovered, also bypass the token transfer prevention
     function _shouldPreventTokenTransfer (address from, address to, uint256 startTokenId, uint256 batchSize) internal override view returns (bool) {
         return 
-        preventTransferWhenLocked == true && // flag for preventing transfers if locked
+        isServiceActive && // if service is not active, do not prevent token transfers
         !(to == msg.sender && hasRole(TOKEN_RECOVERY_ROLE, msg.sender)) && // txn sender is not recovering token
         super._shouldPreventTokenTransfer(from, to, startTokenId, batchSize);
     }
