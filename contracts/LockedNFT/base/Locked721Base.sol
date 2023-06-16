@@ -8,6 +8,8 @@ abstract contract Locked721Base is ILocked721Base, Locked721AccessControl {
     // stores the locked state for each NFT
     mapping(uint256 => bool) tokenLock;
 
+    bool private shouldLockTokensAfterMint = true;
+
     constructor() {
       // contract deployer is the admin by default
       _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -36,6 +38,14 @@ abstract contract Locked721Base is ILocked721Base, Locked721AccessControl {
       return _getTokenLock(tokenId);
     }
 
+    function setShouldLockTokensAfterMint(bool _shouldLockTokensAfterMint) external onlyAdmin {
+      shouldLockTokensAfterMint = _shouldLockTokensAfterMint;
+    }
+
+    function getShouldLockTokensAfterMint() external view returns (bool) {
+      return shouldLockTokensAfterMint;
+    }
+
     // if a token is locked, then this function returns true, 
     // unless the token is being minted,
     // or the message sender has an API DELEGATE role and is claiming the token,
@@ -57,10 +67,11 @@ abstract contract Locked721Base is ILocked721Base, Locked721AccessControl {
     }
 
     function _lockTokensAfterTransfer (address from, address, uint256 startTokenId, uint256 quantity) internal {
-      if (from != address(0)) { // if token is being minted
-        for (uint256 i=0; i<quantity; i++) {
-          _setTokenLock(startTokenId + i, true);
-        }
+      if (from == address(0) && !shouldLockTokensAfterMint) {
+         return;
+      }
+      for (uint256 i=0; i<quantity; i++) {
+        _setTokenLock(startTokenId + i, true);
       }
     } 
 
