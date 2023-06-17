@@ -7,6 +7,7 @@ import {keccak256} from '@ethersproject/keccak256';
 import {toUtf8Bytes} from "@ethersproject/strings";
 
 const ORIGIN_ADDRESS = '0x0000000000000000000000000000000000000000'
+const OWNABLE_CALLER_IS_NOT_ADMIN= 'Caller is not an admin'
 const OWNABLE_CALLER_IS_NOT_API_DELEGATE = 'Caller does not have permission to perform claim or unlock'
 const OWNABLE_CALLER_IS_NOT_NFT_MANAGER = 'Caller does not have permission to manage NFTs'
 const OWNABLE_CALLER_IS_NOT_RECOVERY = 'Caller does not have permission to recover NFTs'
@@ -328,25 +329,25 @@ describe('LegitimatePhygitalNFTv3', () => {
         await expect(lgtNFT.connect(addr1).resetTokenRoyalty(tokenId1)).to.be.revertedWith(OWNABLE_CALLER_IS_NOT_NFT_MANAGER)
       })
     })
-    describe('setServiceStatus', () => {
+    describe('setIsServiceActive', () => {
       it('allows owner to set service status', async () => {
-        await lgtNFT.setServiceStatus(true)
+        await lgtNFT.setIsServiceActive(true)
       })
       it('turns off token lock when status is off', async () => {
         await lgtNFT.setTokenLock(tokenId1, true)
         let tokenLock = await lgtNFT.getTokenLock(tokenId1)
         expect(tokenLock).to.eq(true)
-        await lgtNFT.setServiceStatus(false)
+        await lgtNFT.setIsServiceActive(false)
         tokenLock = await lgtNFT.getTokenLock(tokenId1)
         expect(tokenLock).to.eq(false)
-        let serviceStatus = await lgtNFT.getServiceStatus()
+        let serviceStatus = await lgtNFT.getIsServiceActive()
         expect(serviceStatus).to.eq(false)
-        await lgtNFT.setServiceStatus(true)
-        serviceStatus = await lgtNFT.getServiceStatus()
+        await lgtNFT.setIsServiceActive(true)
+        serviceStatus = await lgtNFT.getIsServiceActive()
         expect(serviceStatus).to.eq(true)
       })
       it('does not allow non-owner to set service status', async () => {
-        await expect(lgtNFT.connect(addr1).setServiceStatus(true)).to.be.revertedWith(OWNABLE_CALLER_IS_NOT_STATUS_MANAGER)
+        await expect(lgtNFT.connect(addr1).setIsServiceActive(true)).to.be.revertedWith(OWNABLE_CALLER_IS_NOT_STATUS_MANAGER)
       })
     })
     describe('grantRole and revokeRole', () => {
@@ -370,10 +371,10 @@ describe('LegitimatePhygitalNFTv3', () => {
       })
       it('allows admin to grant and revoke service manager role', async () => {
         await lgtNFT.grantRole(keccak256(toUtf8Bytes('SERVICE_STATUS_MANAGER_USER')), await addr1.getAddress())
-        await lgtNFT.connect(addr1).setServiceStatus(false)
-        await lgtNFT.connect(addr1).setServiceStatus(true)
+        await lgtNFT.connect(addr1).setIsServiceActive(false)
+        await lgtNFT.connect(addr1).setIsServiceActive(true)
         await lgtNFT.revokeRole(keccak256(toUtf8Bytes('SERVICE_STATUS_MANAGER_USER')), await addr1.getAddress())
-        await expect(lgtNFT.connect(addr1).setServiceStatus(tokenId1)).to.be.revertedWith(OWNABLE_CALLER_IS_NOT_STATUS_MANAGER)
+        await expect(lgtNFT.connect(addr1).setIsServiceActive(tokenId1)).to.be.revertedWith(OWNABLE_CALLER_IS_NOT_STATUS_MANAGER)
       })
     })
     describe('recoverToken', () => {

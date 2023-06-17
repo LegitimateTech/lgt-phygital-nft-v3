@@ -23,9 +23,6 @@ abstract contract Locked721Base is ILocked721Base, Locked721AccessControl {
       _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
       // contract deployer can be granted some initial roles to start with
       _setupRole(API_DELEGATE_ROLE, msg.sender);
-
-      // set default admin as the manager of claim and unlock delegate roles
-      _setRoleAdmin(API_DELEGATE_ROLE, DEFAULT_ADMIN_ROLE);
     }
 
     function setShouldPreventTransferWhenLocked(bool lock) external onlyAdmin {

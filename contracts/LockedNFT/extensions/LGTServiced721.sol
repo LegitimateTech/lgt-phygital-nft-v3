@@ -25,11 +25,11 @@ contract LGTServiced721 is LGTAccessControl, Locked721 {
       _setRoleAdmin(TOKEN_RECOVERY_ROLE, DEFAULT_ADMIN_ROLE);
     }
 
-    function setServiceStatus(bool status) public onlyServiceStatusManager {
-        isServiceActive = status;
+    function setIsServiceActive(bool isServiceActive_) public onlyServiceStatusManager {
+        isServiceActive = isServiceActive_;
     }
 
-    function getServiceStatus() public view returns (bool) {
+    function getIsServiceActive() public view returns (bool) {
         return isServiceActive;
     }
 
