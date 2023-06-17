@@ -4,7 +4,9 @@ pragma solidity ^0.8.2;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "./base/Locked721Base.sol";
 
-abstract contract Locked721 is ERC721, Locked721Base {
+contract Locked721 is ERC721, Locked721Base {
+    constructor(string memory name_, string memory symbol_) ERC721(name_,symbol_) {}
+
     // @todo: is not gas optimized since _afterTokenTransfer sets lock = true and then this sets lock = false
     // This is used for end users to claim NFTs minted to our delegate wallet and makes the claim activation gasless for end users
     // the delegate wallet performing the claim functionality needs to own the NFT

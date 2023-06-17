@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "contracts/Roles/LGTAccessControl.sol";
 import "../Locked721Psi.sol";
 
-abstract contract LGTServiced721Psi is LGTAccessControl, Locked721Psi {
+contract LGTServiced721Psi is LGTAccessControl, Locked721Psi {
     using Strings for uint256;
 
     // service status of this Phygital NFT collection
@@ -14,7 +14,7 @@ abstract contract LGTServiced721Psi is LGTAccessControl, Locked721Psi {
     // can also be used to determine whether exclusive digital content is still active
     bool private isServiceActive = true;
 
-    constructor() {
+    constructor(string memory name_, string memory symbol_) Locked721Psi(name_, symbol_) {
       _setupRole(NFT_MANAGER_ROLE, msg.sender);
       _setupRole(SERVICE_STATUS_ROLE, msg.sender);
 

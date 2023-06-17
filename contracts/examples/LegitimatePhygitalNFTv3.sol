@@ -13,7 +13,7 @@ contract LegitimatePhygitalNFTv3 is LGTServiced721, LGTNFTRoyalty, ERC721Burnabl
     // METADATA
     string public baseURI = "https://metadata.legitimate.tech/example";
 
-    constructor() ERC721("LGTPhygitalNFTv3Example", "LGTNFTv3Example") {
+    constructor() LGTServiced721("LGTPhygitalNFTv3Example", "LGTNFTv3Example") {
     }
 
     function _baseURI() internal view override returns (string memory) {
