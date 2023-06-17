@@ -8,7 +8,7 @@ import "./LegitimateNFTMetadata.sol";
 contract LegitimatePhygitalNFTv3PsiMetadata is LegitimateNFTMetadata, LGTServiced721Psi {
     using Strings for uint256;
 
-    constructor() ERC721Psi("LGTPhygitalNFTv3Example", "LGTNFTv3Example") {}
+    constructor() LGTServiced721Psi("LGTPhygitalNFTv3Example", "LGTNFTv3Example") {}
 
     // This generates the metadata on-chain for each NFT so metadata files do not need to be hosted
     // and unlimited number of NFTs can be minted

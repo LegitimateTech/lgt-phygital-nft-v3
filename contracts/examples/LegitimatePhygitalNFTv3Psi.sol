@@ -10,7 +10,7 @@ contract LegitimatePhygitalNFTv3Psi is LGTServiced721Psi {
     // METADATA
     string public baseURI = "https://metadata.legitimate.tech/example";
 
-    constructor() ERC721Psi("LGTPhygitalNFTv3Example", "LGTNFTv3Example") {
+    constructor() LGTServiced721Psi("LGTPhygitalNFTv3Example", "LGTNFTv3Example") {
     }
 
     function _baseURI() internal view override returns (string memory) {
