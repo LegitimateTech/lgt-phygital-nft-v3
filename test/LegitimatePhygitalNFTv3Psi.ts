@@ -1,6 +1,6 @@
 import {SignerWithAddress} from '@nomiclabs/hardhat-ethers/signers';
 import {expect} from 'chai'
-import {BigNumber, Contract, ContractReceipt, ContractTransaction, Event} from 'ethers';
+import {BigNumber, Contract, Event} from 'ethers';
 import {ethers} from 'hardhat'
 import {getDeployerAddress} from '../scripts/utils'
 import {keccak256} from '@ethersproject/keccak256';
@@ -26,6 +26,7 @@ describe('LegitimatePhygitalNFTv3Psi', () => {
   let deployerAddress: string;
   let initialSupply: BigNumber
 
+  // helper function
   const mintToken = async (_address?: string) => {
     const address = _address || deployerAddress
     const tx2 = await lgtNFT['mint(address)'](address);
@@ -43,17 +44,14 @@ describe('LegitimatePhygitalNFTv3Psi', () => {
     addr1 = signers[1]
     addr2 = signers[2]
     addrWithNoRoles = signers[3]
-
-    const LGTNFT = await ethers.getContractFactory("LegitimatePhygitalNFTv3Psi");
-    lgtNFT = await LGTNFT.deploy();
-    await lgtNFT.deployed();
   })
 
-  afterEach(async () => {
+  beforeEach(async () => {
     // redeploy contract to reset state
     //console.log('afterEach: redeploying contract');
     const LGTNFT = await ethers.getContractFactory("LegitimatePhygitalNFTv3Psi");
     lgtNFT = await LGTNFT.deploy();
+    await lgtNFT.deployed();
     tokenId1 = await mintToken(addr1.address)
     tokenId2 = await mintToken(addr2.address)
     initialSupply = (await lgtNFT.totalSupply())
@@ -126,13 +124,6 @@ describe('LegitimatePhygitalNFTv3Psi', () => {
       expect(initialSupply).to.eq(2)
     })
     describe('mint()', async () => {
-      let expectedTokenId: string
-
-      before(async () => {
-        const startingSupply = await lgtNFT.totalSupply()
-        expectedTokenId = startingSupply.toString()
-      })
-
       //SUCCESS
       it('increments the total supply by 1', async () => {
         const tx = await lgtNFT['mint()']();
@@ -141,6 +132,8 @@ describe('LegitimatePhygitalNFTv3Psi', () => {
         expect(totalSupply).to.eq(initialSupply.add(1))
       })
       it('emits an event with the right args', async () => {
+        const startingSupply = await lgtNFT.totalSupply()
+        const expectedTokenId = startingSupply.toString()
         const tx = await lgtNFT['mint()']();
         const txReceipt = await tx.wait()
         const event = txReceipt.events?.find((ev: Event) => {
@@ -165,13 +158,6 @@ describe('LegitimatePhygitalNFTv3Psi', () => {
       })
     });
     describe('mint(address)', async () => {
-      let expectedTokenId: string
-
-      before(async () => {
-        const startingSupply = await lgtNFT.totalSupply()
-        expectedTokenId = startingSupply.toString()
-      })
-
       //SUCCESS
       it('increments the total supply by 1', async () => {
         const tx = await lgtNFT['mint(address)'](addr1.address);
@@ -180,6 +166,8 @@ describe('LegitimatePhygitalNFTv3Psi', () => {
         expect(totalSupply).to.eq(initialSupply.add(1))
       })
       it('emits an event with the right args', async () => {
+        const startingSupply = await lgtNFT.totalSupply()
+        const expectedTokenId = startingSupply.toString()
         const tx = await lgtNFT['mint(address)'](addr1.address);
         const txReceipt = await tx.wait()
         const event = txReceipt.events?.find((ev: Event) => {
