@@ -12,7 +12,7 @@ contract Locked721Psi is ERC721Psi, Locked721Base {
     // the delegate wallet performing the claim functionality needs to own the NFT
     // we check the ownership information on our API service used by Tap
     function claim(address to, uint256 tokenId) override public onlyApiDelegate {
-      require(_isApprovedOrOwner(msg.sender, tokenId));
+      require(_isApprovedOrOwner(msg.sender, tokenId), 'Locked721Psi: Caller is not approved nor owner');
 
       _transfer(msg.sender, to, tokenId);
       _setTokenLock(tokenId, false);

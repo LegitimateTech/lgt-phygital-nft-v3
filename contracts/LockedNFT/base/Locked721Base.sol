@@ -29,7 +29,7 @@ abstract contract Locked721Base is ILocked721Base, Locked721AccessControl {
       shouldPreventTransferWhenLocked = lock;
     }
 
-    function getShouldPreventTransferWhenLocked() external returns (bool) {
+    function getShouldPreventTransferWhenLocked() external view returns (bool) {
       return shouldPreventTransferWhenLocked;
     }
 
@@ -68,7 +68,7 @@ abstract contract Locked721Base is ILocked721Base, Locked721AccessControl {
       if (
         !shouldPreventTransferWhenLocked || // flag for preventing token transfers
         from == address(0) || // token is being minted
-        (from == msg.sender && hasRole(API_DELEGATE_ROLE, msg.sender)) || // transfer is being initiated by API_DELEGATE_ROLE
+        (bytes4(keccak256("claim(address,uint256)")) == msg.sig) || // this transfer is a call to claim
         to == address(0) // token is being burned
       ) {
         return false;
