@@ -34,7 +34,7 @@ describe('Legitimate1155NFTDistribution', () => {
     it('creates 2 new tokens', async () => {
       const tx = await lgtNFT['mint(address,uint256,uint256)'](deployerAddress, 1, 2);
       const txReceipt = await tx.wait()
-      const collectionSupply = await lgtNFT.collectionSupply();
+      const collectionSupply = await lgtNFT['totalSupply()']();
       const exists = await lgtNFT.exists(1);
       const totalSupply = await lgtNFT['totalSupply(uint256)'](1);
 
