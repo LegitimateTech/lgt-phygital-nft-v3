@@ -1,6 +1,6 @@
 import {SignerWithAddress} from '@nomiclabs/hardhat-ethers/signers';
 import {expect} from 'chai'
-import {Contract} from 'ethers';
+import {BigNumber, Contract, ContractReceipt, ContractTransaction, Event} from 'ethers';
 import {ethers} from 'hardhat'
 import {getDeployerAddress} from '../scripts/utils'
 import {keccak256} from '@ethersproject/keccak256';
@@ -18,12 +18,11 @@ const NONEXISTANT_TOKEN = 'ERC721: owner query for nonexistent token'
 describe('LegitimatePhygitalNFTv3Psi', () => {
   let addr1: SignerWithAddress
   let addr2: SignerWithAddress
-  let addr3: SignerWithAddress
+  let addrWithNoRoles: SignerWithAddress
   let lgtNFT: Contract;
   let deployerAddress: string;
   const tokenId1 = '0'
   const tokenId2 = '1'
-  const tokenId3 = '2'
 
   before(async () => {
     const LGTNFT = await ethers.getContractFactory("LegitimatePhygitalNFTv3Psi");
@@ -33,7 +32,7 @@ describe('LegitimatePhygitalNFTv3Psi', () => {
     const signers = await ethers.getSigners()
     addr1 = signers[1]
     addr2 = signers[2]
-    addr3 = signers[3]
+    addrWithNoRoles = signers[3]
   })
   describe('deployment', async () => {
     it('deploys successfully', async () => {
@@ -52,7 +51,26 @@ describe('LegitimatePhygitalNFTv3Psi', () => {
     });
   })
 
-  describe('configuration options and roles', async () => {
+  describe('configuration options', async () => {
+    describe('baseURI', async () => {
+      let originalBaseURI: string
+      before(async () => {
+        await lgtNFT.grantRole(keccak256(toUtf8Bytes('NFT_MANAGER_USER')), addr1.address)
+        originalBaseURI = await lgtNFT.baseURI()
+      })
+      after(async () => {
+        await lgtNFT.revokeRole(keccak256(toUtf8Bytes('NFT_MANAGER_USER')), addr1.address)
+        await lgtNFT.setBaseURI(originalBaseURI)
+      })
+      it('allows NFT_MANAGER_USER to call setBaseURI', async () => {
+        expect(originalBaseURI).to.eq('https://metadata.legitimate.tech/example')
+        await lgtNFT.connect(addr1).setBaseURI("https://newbaseuri.com")
+      })
+      it('does not allow non NFT_MANAGER_USER to call setBaseURI', async () => {
+        await lgtNFT.revokeRole(keccak256(toUtf8Bytes('NFT_MANAGER_USER')), addr1.address)
+        await expect(lgtNFT.connect(addr1).setBaseURI(originalBaseURI)).to.be.revertedWith(OWNABLE_CALLER_IS_NOT_NFT_MANAGER)
+      })
+    })
     describe('shouldLockTokensAfterMint', async () => {
       it('allows admin to call setShouldLockTokensAfterMint', async () => {
         await lgtNFT.setShouldLockTokensAfterMint(false)
@@ -89,206 +107,366 @@ describe('LegitimatePhygitalNFTv3Psi', () => {
         await expect(lgtNFT.connect(addr1).setIsServiceActive(true)).to.be.revertedWith(OWNABLE_CALLER_IS_NOT_STATUS_MANAGER)
       })
     })
-    describe('baseURI', async () => {
-      const originalBaseURI = lgtNFT.getBaseURI();
-      before(async () => {
-        await lgtNFT.grantRole(keccak256(toUtf8Bytes('NFT_MANAGER_USER')), addr1.address)
-      })
-      after(async () => {
-        await lgtNFT.revokeRole(keccak256(toUtf8Bytes('NFT_MANAGER_USER')), addr1.address)
-        await lgtNFT.setBaseURI("https://newbaseuri.com")
-      })
-      it('allows SERVICE_STATUS_MANAGER_USER to call setBaseURI', async () => {
-        expect(originalBaseURI).to.eq('https://metadata.legitimate.tech/example')
-        await lgtNFT.connect(addr1).setBaseURI("https://newbaseuri.com")
-      })
-      it('does not allow non NFT_MANAGER_USER to call setBaseURI', async () => {
-        await lgtNFT.revokeRole(keccak256(toUtf8Bytes('NFT_MANAGER_USER')), addr1.address)
-        await expect(lgtNFT.connect(addr1).setBaseURI(originalBaseURI)).to.be.revertedWith(OWNABLE_CALLER_IS_NOT_STATUS_MANAGER)
-      })
-    })
   })
 
-  describe('minting', async () => {
-    it('mints a new token', async () => {
-      const tx = await lgtNFT['mint()']();
-      const txReceipt = await tx.wait()
-      const totalSupply = await lgtNFT.totalSupply();
+  describe('mint(), mint(address), mint(address,uint256)', async () => {
+    it('user without NFT_MANAGER_USER role cannot mint', async () => {
+      await expect(lgtNFT.connect(addrWithNoRoles)['mint()']()).to.be.revertedWith(OWNABLE_CALLER_IS_NOT_NFT_MANAGER);
+      await expect(lgtNFT.connect(addrWithNoRoles)['mint(address)'](addr1.address)).to.be.revertedWith(OWNABLE_CALLER_IS_NOT_NFT_MANAGER);
+      await expect(lgtNFT.connect(addrWithNoRoles)['mint(address,uint256)'](addr1.address, 3)).to.be.revertedWith(OWNABLE_CALLER_IS_NOT_NFT_MANAGER);
+      const totalSupply = await lgtNFT.totalSupply()
+      expect(totalSupply.toNumber()).to.eq(0)
+    })
+    describe('mint()', async () => {
+      let tx: ContractTransaction;
+      let txReceipt: ContractReceipt
+      let startingSupply: BigNumber
+      let expectedTokenId: string
+
+      before(async () => {
+        startingSupply = await lgtNFT.totalSupply()
+        expectedTokenId = startingSupply.toString()
+        tx = await lgtNFT['mint()']();
+        txReceipt = await tx.wait()
+      })
 
       //SUCCESS
-      expect(totalSupply.toNumber()).to.eq(1)
-
-      const event = txReceipt.events[0].args
-      expect(event.tokenId.toString()).to.eq(tokenId1, 'id is correct')
-      expect(event.from).to.eq(ORIGIN_ADDRESS, 'from is correct')
-      expect(event.to).to.eq(deployerAddress, 'to is correct')
-
-      let owner = await lgtNFT.ownerOf(tokenId1)
-      expect(owner).to.eq(deployerAddress)
+      it('increments the total supply by 1', async () => {
+        const totalSupply = await lgtNFT.totalSupply();
+        expect(totalSupply).to.eq(startingSupply.add(1))
+      })
+      it('emits an event with the right args', async () => {
+        const event = txReceipt.events?.find((ev) => {
+          return ev.event == 'Transfer'
+        })
+        expect(event).to.exist
+        if (event) {
+          expect(event.args?.tokenId.toString()).to.eq(expectedTokenId, 'id is correct')
+          expect(event.args?.from).to.eq(ORIGIN_ADDRESS, 'from is correct')
+          expect(event.args?.to).to.eq(deployerAddress, 'to is correct')
+        }
+      })
+      it('the owner of the tokenID is correct', async () => {
+        const owner = await lgtNFT.ownerOf(expectedTokenId)
+        expect(owner).to.eq(deployerAddress)
+      })
     });
-    it('mints a new token to a separate address', async () => {
-      await lgtNFT.setShouldPreventTransferWhenLocked(true)
-      const tx = await lgtNFT['mint(address)'](addr1.address);
-      const txReceipt = await tx.wait()
-      const totalSupply = await lgtNFT.totalSupply();
-      await lgtNFT.setShouldPreventTransferWhenLocked(false)
+    describe('mint(address)', async () => {
+      let tx: ContractTransaction
+      let txReceipt: ContractReceipt
+      let startingSupply: BigNumber
+      let expectedTokenId: string
+      const mintToAddress = addr1.address
+
+      before(async () => {
+        await lgtNFT.setShouldPreventTransferWhenLocked(true)
+        startingSupply = await lgtNFT.totalSupply();
+        expectedTokenId = startingSupply.toString()
+        tx = await lgtNFT['mint(address)'](mintToAddress);
+        txReceipt = await tx.wait()
+        await lgtNFT.setShouldPreventTransferWhenLocked(false)
+      })
 
       //SUCCESS
-      expect(totalSupply.toNumber()).to.eq(2)
+      it('increments the total supply by 1', async () => {
+        const totalSupply = await lgtNFT.totalSupply();
+        expect(totalSupply).to.eq(startingSupply.add(1))
+      })
+      it('emits an event with the right args', async () => {
+        const event = txReceipt.events?.find((ev) => {
+          return ev.event == 'Transfer'
+        })
+        expect(event).to.exist
+        if (event) {
+          expect(event.args?.tokenId.toString()).to.eq(expectedTokenId, 'id is correct')
+          expect(event.args?.from).to.eq(ORIGIN_ADDRESS, 'from is correct')
+          expect(event.args?.to).to.eq(mintToAddress, 'to is correct')
+        }
+      })
+      it('the owner of the tokenID is correct', async () => {
+        const owner = await lgtNFT.ownerOf(expectedTokenId)
+        expect(owner).to.eq(mintToAddress)
+      })
+    })
+    describe('mint(address,uint256) – batch minting', async () => {
+      let tx: ContractTransaction
+      let txReceipt: ContractReceipt
+      let startingSupply: BigNumber
+      let events: Event[]
+      let mintToAddress: string
+      const numberToMint = 3
 
-      const event = txReceipt.events[0].args
-      expect(event.tokenId.toString()).to.eq(tokenId2, 'id is correct')
-      expect(event.from).to.eq(ORIGIN_ADDRESS, 'from is correct')
-      expect(event.to).to.eq(addr1.address, 'to is correct')
+      before(async () => {
+        mintToAddress = deployerAddress
+        await lgtNFT.setShouldPreventTransferWhenLocked(true)
+        startingSupply = await lgtNFT.totalSupply();
+        tx = await lgtNFT['mint(address,uint256)'](mintToAddress, numberToMint);
+        txReceipt = await tx.wait()
+        await lgtNFT.setShouldPreventTransferWhenLocked(false)
+      })
 
-      let owner = await lgtNFT.ownerOf(tokenId2)
-      expect(owner).to.eq(addr1.address)
-    });
-    it('batch mints NFTs', async () => {
-      const tx = await lgtNFT['mint(address,uint256)'](deployerAddress, 3);
-      const txReceipt = await tx.wait()
+      it('increments the total supply properly', async () => {
+        const totalSupply = await lgtNFT.totalSupply();
+        expect(totalSupply.toNumber()).to.eq(startingSupply.add(numberToMint).toNumber())
+      })
 
-      const totalSupply = await lgtNFT.totalSupply();
-      expect(totalSupply.toNumber()).to.eq(5)
+      it('emits the right number of events', async () => {
+        if (txReceipt?.events) {
+          events = txReceipt?.events
+        }
+        expect(events.length).to.eq(numberToMint)
+      })
 
-      const events = txReceipt.events
-      expect(events.length).to.eq(3)
-
-      for (let i = 0;i<events.length;i++) {
-        const { tokenId, from, to } = events[i].args
-        const expectedTokenId = Number.parseInt(tokenId3) + i
-        expect(tokenId).to.eq(expectedTokenId, 'id is correct')
-        expect(from).to.eq(ORIGIN_ADDRESS, 'from is correct')
-        expect(to).to.eq(deployerAddress, 'to is correct')
-        const tokenLock = await lgtNFT.getTokenLock(tokenId)
-        expect(tokenLock).to.eq(true)
-        const owner = await lgtNFT.ownerOf(tokenId)
-        expect(owner, deployerAddress)
-      }
+      it('emits Transfer events with all the right args', async () => {
+        txReceipt?.events?.forEach(async (ev, i) => {
+          const {event, args} = ev
+          expect(event).to.eq('Transfer')
+          const expectedTokenId = startingSupply.add(i)
+          expect(args?.tokenId).to.eq(expectedTokenId, 'id is correct')
+          expect(args?.from).to.eq(ORIGIN_ADDRESS, 'from is correct')
+          expect(args?.to).to.eq(mintToAddress, 'to is correct')
+          const tokenLock = await lgtNFT.getTokenLock(args?.tokenId)
+          expect(tokenLock).to.eq(true)
+          const owner = await lgtNFT.ownerOf(args?.tokenId)
+          expect(owner, mintToAddress)
+        })
+      })
     })
     it('minting NFTs with flag shouldLockTokensAfterMint set to false', async () => {
-      await lgtNFT.setShouldLockTokensAfterMint(false);
+      let tx: ContractTransaction
+      let txReceipt: ContractReceipt
+      let startingSupply: BigNumber
+      let events: Event[]
       const mintToAddress = addr1.address
-      const tx = await lgtNFT['mint(address,uint256)'](mintToAddress, 2);
-      const txReceipt = await tx.wait()
+      const numberToMint = 3
 
-      const totalSupply = await lgtNFT.totalSupply();
-      expect(totalSupply.toNumber()).to.eq(7)
+      before(async () => {
+        await lgtNFT.setShouldLockTokensAfterMint(false);
+        startingSupply = await lgtNFT.totalSupply();
+        tx = await lgtNFT['mint(address,uint256)'](mintToAddress, 3);
+        txReceipt = await tx.wait()
+      })
+      after(async () => {
+        // resets
+        await lgtNFT.setShouldPreventTransferWhenLocked(true)
+      })
 
-      const events = txReceipt.events
-      expect(events.length).to.eq(2)
 
-      for (let i = 0;i<events.length;i++) {
-        const { tokenId, from, to } = events[i].args
-        const expectedTokenId = 5 + i
-        expect(tokenId).to.eq(expectedTokenId, 'id is correct')
-        expect(from).to.eq(ORIGIN_ADDRESS, 'from is correct')
-        expect(to).to.eq(mintToAddress, 'to is correct')
-        const tokenLock = await lgtNFT.getTokenLock(tokenId)
-        expect(tokenLock).to.eq(false)
-      }
-      // resets
-      await lgtNFT.setShouldLockTokensAfterMint(true);
+      it('increments the total supply properly', async () => {
+        const totalSupply = await lgtNFT.totalSupply();
+        expect(totalSupply.toNumber()).to.eq(startingSupply.add(numberToMint).toNumber())
+      })
+
+      it('emits the right number of events', async () => {
+        if (txReceipt?.events) {
+          events = txReceipt?.events
+        }
+        expect(events.length).to.eq(numberToMint)
+      })
+
+      it('emits Transfer events with all the right args', async () => {
+        txReceipt?.events?.forEach(async (ev, i) => {
+          const {event, args} = ev
+          expect(event).to.eq('Transfer')
+          const expectedTokenId = startingSupply.add(i)
+          expect(args?.tokenId).to.eq(expectedTokenId, 'id is correct')
+          expect(args?.from).to.eq(ORIGIN_ADDRESS, 'from is correct')
+          expect(args?.to).to.eq(mintToAddress, 'to is correct')
+          const tokenLock = await lgtNFT.getTokenLock(args?.tokenId)
+          expect(tokenLock).to.eq(false)
+          const owner = await lgtNFT.ownerOf(args?.tokenId)
+          expect(owner, mintToAddress)
+        })
+      })
     })
   })
   //
   describe('transferring', async () => {
-    it('transfer a token from one address to another', async () => {
-      const tx = await lgtNFT.transferFrom(deployerAddress, addr1.address, tokenId1);
-      const txReceipt = await tx.wait()
+    describe('transferring', async () => {
+      let tokenId: string
 
-      //SUCCESS
-      const event = txReceipt.events[1].args;
-      expect(event.tokenId.toString()).to.eq(tokenId1, 'id is correct');
-      expect(event.from).to.eq(deployerAddress, 'from is correct');
-      expect(event.to).to.eq(addr1.address, 'to is correct')
-      const owner = await lgtNFT.ownerOf(tokenId1);
+      before(async () => {
+        const tx = await lgtNFT['mint()']();
+        const txReceipt = await tx.wait()
+        const event = txReceipt.events?.find((ev: Event) => {
+          return ev.event == 'Transfer'
+        })
+        tokenId = event?.args?.tokenId
+      })
+
+      it('transfer a token from one address to another', async () => {
+        const tx = await lgtNFT.transferFrom(deployerAddress, addr1.address, tokenId);
+        const txReceipt = await tx.wait()
+
+        //SUCCESS
+        const event = txReceipt.events[1].args;
+        expect(event.tokenId.toString()).to.eq(tokenId, 'id is correct');
+        expect(event.from).to.eq(deployerAddress, 'from is correct');
+        expect(event.to).to.eq(addr1.address, 'to is correct')
+        const owner = await lgtNFT.ownerOf(tokenId);
         expect(owner, addr1.address);
       });
-    });
-    //
-    describe('transferring token with lock states', async () => {
+    })
+
+    describe('if setShouldPreventTransferWhenLocked is true', async () => {
+      let tokenId: string
+
       before(async () => {
+        const tx = await lgtNFT['mint(address)'](addr1.address);
+        const txReceipt = await tx.wait()
+        const event = txReceipt.events?.find((ev: Event) => {
+          return ev.event == 'Transfer'
+        })
+        tokenId = event?.args?.tokenId
         await lgtNFT.setShouldPreventTransferWhenLocked(true)
       })
+
       it('should revert if token is locked', async () => {
         // address without API_DELEGATE permission should not be able to transfer locked NFT when transfer lock is set
-        await expect(lgtNFT.connect(addr1).transferFrom(addr1.address, addr2.address, tokenId1)).to.be.revertedWith(TOKEN_NOT_UNLOCKED);
+        await expect(lgtNFT.connect(addr1).transferFrom(addr1.address, addr2.address, tokenId)).to.be.revertedWith(TOKEN_NOT_UNLOCKED);
       })
       it('should pass if token is unlocked, and lock the token after transfer', async () => {
-        await lgtNFT.setTokenLock(tokenId1, false)
-        const tx = await lgtNFT.connect(addr1).transferFrom(addr1.address, deployerAddress, tokenId1);
+        await lgtNFT.setTokenLock(tokenId, false)
+        const tx = await lgtNFT.connect(addr1).transferFrom(addr1.address, deployerAddress, tokenId);
         await tx.wait()
-        expect(await lgtNFT.getTokenLock(tokenId1)).to.eq(true);
+        expect(await lgtNFT.getTokenLock(tokenId)).to.eq(true);
         // reset transfer lock
         await lgtNFT.setShouldPreventTransferWhenLocked(false)
       });
-      it('should pass if setShouldPreventTransferWhenLocked is false, even if token is locked', async () => {
+    })
+
+    describe('if setShouldPreventTransferWhenLocked is false', async () => {
+      let tokenId: string
+
+      before(async () => {
+        const tx = await lgtNFT['mint()']();
+        const txReceipt = await tx.wait()
+        const event = txReceipt.events?.find((ev: Event) => {
+          return ev.event == 'Transfer'
+        })
+        tokenId = event?.args?.tokenId
+        await lgtNFT.setShouldPreventTransferWhenLocked(false)
+      })
+
+      it('should pass even if token is locked', async () => {
         // reset transfer lock
         await lgtNFT.setShouldPreventTransferWhenLocked(false)
-        const tx = await lgtNFT.transferFrom(deployerAddress, addr1.address, tokenId1);
+        const tx = await lgtNFT.transferFrom(deployerAddress, addr1.address, tokenId);
         await tx.wait()
-        expect(await lgtNFT.getTokenLock(tokenId1)).to.eq(true);
+        expect(await lgtNFT.getTokenLock(tokenId)).to.eq(true);
       });
+    })
+  });
+  //
+  describe('setBaseURI', async () => {
+    let tokenId1: string, tokenId2: string
+    let ogTokenLock1: boolean, ogTokenLock2: boolean
+    before(async () => {
+      const totalSupply = (await lgtNFT.totalSupply()).toNumber()
+      tokenId1 = Math.floor(Math.random() * totalSupply).toString()
+      tokenId2 = Math.floor(Math.random() * totalSupply).toString()
+      ogTokenLock1 = await lgtNFT.getTokenLock(tokenId1)
+      ogTokenLock2 = await lgtNFT.getTokenLock(tokenId2)
+      await lgtNFT.setTokenLock(tokenId1, true)
+      await lgtNFT.setTokenLock(tokenId2, true)
+    })
+    after(async () => {
+      await lgtNFT.setTokenLock(tokenId1, ogTokenLock1)
+      await lgtNFT.setTokenLock(tokenId2, ogTokenLock2)
+    })
+
+    it('returns original baseURI', async () => {
+      const result = await lgtNFT.tokenURI(tokenId1);
+      const result2 = await lgtNFT.tokenURI(tokenId2);
+
+      //SUCCESS
+      expect(result.toLowerCase()).to.eq(`https://metadata.legitimate.tech/example/locked`);
+      expect(result2.toLowerCase()).to.eq(`https://metadata.legitimate.tech/example/locked`);
     });
-    //
-    describe('read token uri', async () => {
-      it('sets new base uri and returns new metadata uri', async () => {
-        const result = await lgtNFT.tokenURI(tokenId1);
-        const result2 = await lgtNFT.tokenURI(tokenId2);
+    it('sets new base uri and returns new metadata uri', async () => {
+      await lgtNFT.setBaseURI("https://somethingelse.com")
+      const result = await lgtNFT.tokenURI(tokenId1);
+      const result2 = await lgtNFT.tokenURI(tokenId2);
 
-        //SUCCESS
-        expect(result.toLowerCase()).to.eq(`https://metadata.legitimate.tech/example/locked`);
-        expect(result2.toLowerCase()).to.eq(`https://metadata.legitimate.tech/example/locked`);
-      });
+      //SUCCESS
+      expect(result.toLowerCase()).to.eq(`https://somethingelse.com/locked`);
+      expect(result2.toLowerCase()).to.eq(`https://somethingelse.com/locked`);
     });
-    //
-    describe('set base uri', async () => {
-      it('sets new base uri and returns new metadata uri', async () => {
-        await lgtNFT.setBaseURI("https://somethingelse.com")
-        const result = await lgtNFT.tokenURI(tokenId1);
-        const result2 = await lgtNFT.tokenURI(tokenId2);
+  })
 
-        //SUCCESS
-        expect(result.toLowerCase()).to.eq(`https://somethingelse.com/locked`);
-        expect(result2.toLowerCase()).to.eq(`https://somethingelse.com/locked`);
-      });
-    });
+  describe('token locks', () => {
+    let tokenId1: string, tokenId2: string
+    let ogTokenLock1: boolean, ogTokenLock2: boolean
+    before(async () => {
+      const totalSupply = (await lgtNFT.totalSupply()).toNumber()
+      tokenId1 = Math.floor(Math.random() * totalSupply).toString()
+      tokenId2 = Math.floor(Math.random() * totalSupply).toString()
+      ogTokenLock1 = await lgtNFT.getTokenLock(tokenId1)
+      ogTokenLock2 = await lgtNFT.getTokenLock(tokenId2)
+      await lgtNFT.setTokenLock(tokenId1, true)
+      await lgtNFT.setTokenLock(tokenId2, true)
+    })
+    after(async () => {
+      await lgtNFT.setTokenLock(tokenId1, ogTokenLock1)
+      await lgtNFT.setTokenLock(tokenId2, ogTokenLock2)
+    })
 
-    describe('token locks', () => {
-      describe('setTokenLock', async () => {
-        it('allows owner to set token lock', async () => {
-          let tokenLock = await lgtNFT.getTokenLock(tokenId1)
-          expect(tokenLock).to.eq(true)
+    describe('setTokenLock', async () => {
 
+      it('allows owner to set token lock', async () => {
+        const tokenLock = await lgtNFT.getTokenLock(tokenId1)
+        expect(tokenLock).to.eq(true)
         await lgtNFT.setTokenLock(tokenId1, false)
-
+      })
+      it('setting a token to unlocked changes the metadata url', async () => {
         const tokenUri = await lgtNFT.tokenURI(tokenId1)
         expect(tokenUri.toLowerCase()).to.eq(`https://somethingelse.com/${tokenId1}`)
-        tokenLock = await lgtNFT.getTokenLock(tokenId1)
+      })
+      it('if a token is unlocked, getTokenLock returns false', async () => {
+        const tokenLock = await lgtNFT.getTokenLock(tokenId1)
         expect(tokenLock).to.eq(false)
       })
-      it('does not allow non-owner to set token lock', async () => {
+      it('does not allow non API_DELEGATE_ROLE user to set token lock', async () => {
         await expect(lgtNFT.connect(addr1).setTokenLock(tokenId1, false)).to.be.revertedWith(OWNABLE_CALLER_IS_NOT_API_DELEGATE)
       })
     })
     describe('_afterTokenTransfer', async () => {
-      it('automatically locks a token', async () => {
-        let tokenLock = await lgtNFT.getTokenLock(tokenId2)
-        expect(tokenLock).to.eq(true)
-        tokenLock = await lgtNFT.setTokenLock(tokenId2, false)
+      const tokenLock = await lgtNFT.getTokenLock(tokenId2)
+      expect(tokenLock).to.eq(true)
+      await lgtNFT.setTokenLock(tokenId2, false)
 
-        await lgtNFT.connect(addr1).transferFrom(addr1.address, addr2.address, tokenId2);
+      await lgtNFT.connect(addr1).transferFrom(addr1.address, addr2.address, tokenId2);
 
-        const tokenUri = await lgtNFT.tokenURI(tokenId2)
-        expect(tokenUri.toLowerCase()).to.eq(`https://somethingelse.com/locked`)
-        tokenLock = await lgtNFT.getTokenLock(tokenId2)
-        expect(tokenLock).to.eq(true)
+      it('automatically locks a token after a transfer', async () => {
+        expect(await lgtNFT.getTokenLock(tokenId2)).to.eq(true)
       })
     })
   })
 
   describe('misc.', () => {
+    let tokenId1: string, tokenId2: string
+    let mintToAddress
+
+    before(async () => {
+      mintToAddress = addr1.address
+      const tx = await lgtNFT['mint(address)'](mintToAddress);
+      const txReceipt = await tx.wait()
+      const tokens: string[] = []
+      txReceipt?.events?.forEach(async (ev: Event) => {
+        const {event, args} = ev
+        expect(event).to.eq('Transfer')
+        tokens.push(args?.tokenId)
+      })
+      tokenId1 = tokens[0]
+      const tx2 = await lgtNFT['mint(address)'](addrWithNoRoles.address);
+      const txReceipt2 = await tx2.wait()
+      txReceipt2?.events?.forEach(async (ev: Event) => {
+        const {event, args} = ev
+        expect(event).to.eq('Transfer')
+        tokens.push(args?.tokenId)
+      })
+      tokenId2 = tokens[1]
+    })
     describe('setIsServiceActive', () => {
       it('allows owner to set service status', async () => {
         await lgtNFT.setIsServiceActive(true)
@@ -375,12 +553,12 @@ describe('LegitimatePhygitalNFTv3Psi', () => {
     })
     describe('recoverToken', () => {
       it('TOKEN_RECOVERY_USER can recover a token from another address', async () => {
-        let owner = await lgtNFT.ownerOf(tokenId1)
+        let owner = await lgtNFT.ownerOf(tokenId2)
         expect(owner).to.not.eq(deployerAddress)
 
         await lgtNFT.grantRole(keccak256(toUtf8Bytes('TOKEN_RECOVERY_USER')), deployerAddress)
-        await lgtNFT.recoverToken(tokenId1)
-        owner = await lgtNFT.ownerOf(tokenId1)
+        await lgtNFT.recoverToken(tokenId2)
+        owner = await lgtNFT.ownerOf(tokenId2)
         expect(owner).to.eq(deployerAddress)
       })
       describe('while shouldPreventTransferWhenLocked is true', () => {
@@ -408,12 +586,15 @@ describe('LegitimatePhygitalNFTv3Psi', () => {
     })
     describe('claim', () => {
       it('API_DELEGATE can perform claim function and send NFT to Tap end consumer', async () => {
-        await lgtNFT.claim(addr2.address, tokenId1)
+        expect(await lgtNFT.ownerOf(tokenId2)).to.eq(deployerAddress)
 
-        const owner = await lgtNFT.ownerOf(tokenId1)
+        await lgtNFT.claim(addr2.address, tokenId2)
+
+        const owner = await lgtNFT.ownerOf(tokenId2)
         expect(owner).to.eq(addr2.address)
-        const tokenLock = await lgtNFT.getTokenLock(tokenId1)
+        const tokenLock = await lgtNFT.getTokenLock(tokenId2)
         expect(tokenLock).to.eq(false)
+        await lgtNFT.recoverToken(tokenId2)
       })
       describe('while shouldPreventTransferWhenLocked is true', () => {
         it('API_DELEGATE can still perform claim function and send NFT to Tap end consumer', async () => {
