@@ -56,7 +56,7 @@ contract LGTServiced721Psi is LGTAccessControl, Locked721Psi {
     function _shouldPreventTokenTransfer (address from, address to, uint256 startTokenId, uint256 batchSize) internal override view returns (bool) {
         return 
         isServiceActive && // if service is not active, do not prevent token transfers
-        !(to == msg.sender && hasRole(TOKEN_RECOVERY_ROLE, msg.sender)) && // txn sender is not recovering token
+        bytes4(keccak256("recoverToken(uint256)")) != msg.sig && // this transfer is not a call to recoverToken 
         super._shouldPreventTokenTransfer(from, to, startTokenId, batchSize);
     }
 
