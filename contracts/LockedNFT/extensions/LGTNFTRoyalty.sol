@@ -5,25 +5,25 @@ import "contracts/Roles/NFTManagerAccessControl.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Royalty.sol";
 
 abstract contract LGTNFTRoyalty is ERC721Royalty, NFTManagerAccessControl {
-    function mint(uint256 tokenId, address to, address feeReceiver, uint96 feeNumerator) public onlyNftManager{
+    function mint(uint256 tokenId, address to, address feeReceiver, uint96 feeNumerator) external onlyNftManager{
       _safeMint(to, tokenId);
       _setTokenRoyalty(tokenId, feeReceiver, feeNumerator);
     }
 
     // ROYALTY FUNCTIONS
-    function setTokenRoyalty(uint256 tokenId, address receiver, uint96 feeNumerator) public onlyNftManager {
+    function setTokenRoyalty(uint256 tokenId, address receiver, uint96 feeNumerator) external onlyNftManager {
       _setTokenRoyalty(tokenId, receiver, feeNumerator);
     }
 
-    function setDefaultRoyalty(address receiver, uint96 feeNumerator) public onlyNftManager {
+    function setDefaultRoyalty(address receiver, uint96 feeNumerator) external onlyNftManager {
       _setDefaultRoyalty(receiver, feeNumerator);
     }
 
-    function deleteDefaultRoyalty() public onlyNftManager{
+    function deleteDefaultRoyalty() external onlyNftManager{
       _deleteDefaultRoyalty();
     }
 
-    function resetTokenRoyalty(uint256 tokenId) public onlyNftManager {
+    function resetTokenRoyalty(uint256 tokenId) external onlyNftManager {
       _resetTokenRoyalty(tokenId);
     }
 
