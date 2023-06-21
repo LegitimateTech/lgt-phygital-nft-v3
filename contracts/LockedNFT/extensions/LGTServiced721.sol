@@ -25,11 +25,11 @@ contract LGTServiced721 is LGTAccessControl, Locked721 {
       _setRoleAdmin(TOKEN_RECOVERY_ROLE, DEFAULT_ADMIN_ROLE);
     }
 
-    function setIsServiceActive(bool isServiceActive_) public onlyServiceStatusManager {
+    function setIsServiceActive(bool isServiceActive_) external onlyServiceStatusManager {
         isServiceActive = isServiceActive_;
     }
 
-    function getIsServiceActive() public view returns (bool) {
+    function getIsServiceActive() external view returns (bool) {
         return isServiceActive;
     }
 
@@ -39,11 +39,11 @@ contract LGTServiced721 is LGTAccessControl, Locked721 {
     }
 
     // MINTING FUNCTIONS
-    function mint(uint256 tokenId) public onlyNftManager {
+    function mint(uint256 tokenId) external onlyNftManager {
       _safeMint(msg.sender, tokenId);
     }
 
-    function mint(address to, uint256 startTokenId, uint256 quantity) public onlyNftManager {
+    function mint(address to, uint256 startTokenId, uint256 quantity) external onlyNftManager {
       for (uint256 i = 0; i < quantity; i++) {
         _safeMint(to, startTokenId + i);
       }
@@ -63,7 +63,7 @@ contract LGTServiced721 is LGTAccessControl, Locked721 {
     // and recover the NFT so that it can be sent to the API delegate wallet and resold with the NFT.
     // The new owner can claim or activate again as if the item was brand new.
     // @IMPORTANT: Comment out the line below in if token recovery is not needed
-    function recoverToken(uint256 tokenId) public onlyTokenRecoveryUser {
+    function recoverToken(uint256 tokenId) external onlyTokenRecoveryUser {
       _safeTransfer(ownerOf(tokenId), msg.sender, tokenId, "");
     }
 

@@ -16,23 +16,23 @@ abstract contract LegitimateNFTMetadata is NFTManagerAccessControl {
     bool public isNumbered = true; // displays the number in the title of the NFT
 
     // SET NFT METADATA
-    function setNftTitle(string memory newTitle) public onlyNftManager {
+    function setNftTitle(string memory newTitle) external onlyNftManager {
         nftTitle = newTitle;
     }
 
-    function setNftDescription(string memory newDescription) public onlyNftManager {
+    function setNftDescription(string memory newDescription) external onlyNftManager {
         nftDescription = newDescription;
     }
 
-    function setNftAnimationUri(string memory newAnimationUri) public onlyNftManager {
+    function setNftAnimationUri(string memory newAnimationUri) external onlyNftManager {
         nftAnimationUri = newAnimationUri;
     }
 
-    function setNftImageUri(string memory newImageUri) public onlyNftManager {
+    function setNftImageUri(string memory newImageUri) external onlyNftManager {
         nftImageUri = newImageUri;
     }
 
-    function setIsNumbered(bool newIsNumbered) public onlyNftManager {
+    function setIsNumbered(bool newIsNumbered) external onlyNftManager {
         isNumbered = newIsNumbered;
     }
 
@@ -61,7 +61,7 @@ abstract contract LegitimateNFTMetadata is NFTManagerAccessControl {
         );
     }
 
-    function tokenURI(uint256 tokenId) public view virtual returns (string memory) {
+    function tokenURI(uint256 tokenId) external view virtual returns (string memory) {
       return _tokenURI(tokenId);
     }
 }
