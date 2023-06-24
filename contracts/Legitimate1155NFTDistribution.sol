@@ -12,6 +12,9 @@ contract Legitimate1155NFTDistribution is ERC1155, AccessControl {
     mapping(uint256 => uint256) private _totalSupply;
     uint256 private _collectionSupply = 0;
 
+    // for OpenSea unidentified contract
+    // https://stackoverflow.com/questions/68891144/how-to-fix-unidentified-contract-opensea-is-unable-to-understand-erc1155
+    string public name = "LGT 1155 Token Example";
 
     // ERC1155Supply Modifications
     /**
