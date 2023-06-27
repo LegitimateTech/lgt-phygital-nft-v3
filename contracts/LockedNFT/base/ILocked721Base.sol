@@ -25,6 +25,10 @@ interface ILocked721Base is IERC5192 {
     // TOKENLOCK FUNCTIONS
     function setTokenLock(uint256 tokenId, bool locked) external;
 
+    // @notice DEPRECATED: This is a helper function to support existing functionality in dApps prior to implementing ERC-5192
+    // @dev For external calls, use locked(uint256 tokenId) instead
+    function getTokenLock(uint256 tokenId) external view returns (bool);
+
     // This is used for end users to claim NFTs minted to our delegate wallet and makes the claim activation gasless for end users
     // the delegate wallet performing the claim functionality needs to own the NFT
     // we check the ownership information on our API service used by Tap

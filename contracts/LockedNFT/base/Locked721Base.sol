@@ -52,6 +52,12 @@ abstract contract Locked721Base is ILocked721Base, Locked721AccessControl {
       return tokenLock[_tokenId];
     }
 
+    // @notice DEPRECATED: This is a helper function to support existing functionality in dApps prior to implementing ERC-5192
+    // @dev For external calls, use locked(uint256 tokenId) instead
+    function getTokenLock(uint256 tokenId) override external view returns (bool) {
+      return _getTokenLock(tokenId);
+    }
+
     function locked(uint256 tokenId) override external view returns (bool) {
       return _getTokenLock(tokenId);
     }
