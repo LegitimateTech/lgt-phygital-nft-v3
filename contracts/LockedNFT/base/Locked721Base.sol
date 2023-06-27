@@ -34,20 +34,25 @@ abstract contract Locked721Base is ILocked721Base, Locked721AccessControl {
     }
 
     // TOKENLOCK FUNCTIONS
-    function _setTokenLock(uint256 tokenId, bool locked) internal {
-      tokenLock[tokenId] = locked;
+    function _setTokenLock(uint256 _tokenId, bool _locked) internal {
+      tokenLock[_tokenId] = _locked;
+      if (_locked) {
+        emit Locked(_tokenId);
+      } else {
+        emit Unlocked(_tokenId);
+      }
     }
 
-    function setTokenLock(uint256 tokenId, bool locked) override external onlyApiDelegate {
-      _setTokenLock(tokenId, locked);
+    function setTokenLock(uint256 _tokenId, bool _locked) override external onlyApiDelegate {
+      _setTokenLock(_tokenId, _locked);
     }
 
     // READ TOKENLOCK STATE FUNCTIONS
-    function _getTokenLock(uint256 tokenId) internal virtual view returns (bool) {
-      return tokenLock[tokenId];
+    function _getTokenLock(uint256 _tokenId) internal virtual view returns (bool) {
+      return tokenLock[_tokenId];
     }
 
-    function getTokenLock(uint256 tokenId) override external view returns (bool) {
+    function locked(uint256 tokenId) override external view returns (bool) {
       return _getTokenLock(tokenId);
     }
 
@@ -94,4 +99,8 @@ abstract contract Locked721Base is ILocked721Base, Locked721AccessControl {
     // the delegate wallet performing the claim functionality needs to own the NFT
     // we check the ownership information on our API service used by Tap
     function claim(address to, uint256 tokenId) override virtual external onlyApiDelegate {}
+
+    function supportsInterface(bytes4 interfaceId) override virtual public view returns(bool) {
+      return super.supportsInterface(interfaceId) || interfaceId == type(IERC5192).interfaceId;
+    }
 }

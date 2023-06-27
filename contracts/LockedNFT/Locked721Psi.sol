@@ -42,9 +42,9 @@ contract Locked721Psi is ERC721Psi, Locked721Base {
     public
     view
     virtual
-    override(ERC721Psi, AccessControl)
+    override(ERC721Psi, Locked721Base)
     returns (bool)
     {
-      return ERC721Psi.supportsInterface(interfaceId) || AccessControl.supportsInterface(interfaceId);
+      return ERC721Psi.supportsInterface(interfaceId) || Locked721Base.supportsInterface(interfaceId);
     }
 }
