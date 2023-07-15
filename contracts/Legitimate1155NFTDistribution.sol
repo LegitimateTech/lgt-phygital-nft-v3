@@ -16,6 +16,14 @@ contract Legitimate1155NFTDistribution is ERC1155, AccessControl {
     // https://stackoverflow.com/questions/68891144/how-to-fix-unidentified-contract-opensea-is-unable-to-understand-erc1155
     string public name = "LGT 1155 Token Example";
 
+    // METADATA
+    string public nftTitle = "LGT Example NFT"; // Title of the NFT collection
+    string public nftDescription = "This is an example NFT"; // Description in string or markdown format
+    string public nftAnimationUri = ""; // IPFS or HTTP URL
+    string public nftImageUri = "https://ipfs.legitimate.tech/ipfs/QmZxHi87WSABAC2Sh4HWckVgTwXrW4GuVHF7f6LnssG5GU"; // IPFS or HTTP URL
+    bool public isNumbered = true; // displays the number in the title of the NFT
+    bool public isSoulbound = true; // NFTs cannot be transferred once they are claimed
+
     // ERC1155Supply Modifications
     /**
      * @dev Total amount of tokens in with a given id.
@@ -76,8 +84,6 @@ contract Legitimate1155NFTDistribution is ERC1155, AccessControl {
     // role for Legitimate to distribute NFTs
     bytes32 public constant NFT_MANAGER_ROLE = keccak256("NFT_MANAGER_USER");
 
-    bool public isSoulbound = true; // NFTs cannot be transferred once they are claimed
-
     constructor() ERC1155("https://metadata.legitimate.tech/example/{id}") {
       // contract deployer is the admin by default
       _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -111,5 +117,38 @@ contract Legitimate1155NFTDistribution is ERC1155, AccessControl {
     returns (bool)
     {
         return super.supportsInterface(interfaceId);
+    }
+
+    function setIsNumbered(bool newIsNumbered) public onlyNftManager {
+        isNumbered = newIsNumbered;
+    }
+
+    // This generates the metadata on-chain for each NFT so metadata files do not need to be hosted
+    // and unlimited number of NFTs can be minted
+    function uri(uint256 tokenId) public view virtual override(ERC1155) returns (string memory) {
+        require(exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
+
+        string memory title = nftTitle;
+
+        if (isNumbered) {
+          title = string(abi.encodePacked(nftTitle, " #", tokenId.toString()));
+        }
+
+        // individual token metadata filename is just the numbered tokenId
+        bytes memory dataURI = abi.encodePacked(
+            '{',
+                '"name": "', title, '",',
+                '"description": "', nftDescription, '",',
+                '"image": "', nftImageUri, '",',
+                '"animation_url": "', nftAnimationUri, '"',
+            '}'
+        );
+
+        return string(
+            abi.encodePacked(
+                "data:application/json;base64,",
+                Base64.encode(dataURI)
+            )
+        );
     }
 }

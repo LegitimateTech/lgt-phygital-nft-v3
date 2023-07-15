@@ -80,7 +80,7 @@ describe('Legitimate1155NFTDistribution', () => {
       const result = await lgtNFT.uri(1);
 
       //SUCCESS
-      expect(result.toLowerCase()).to.eq(`https://metadata.legitimate.tech/example/{id}`);
+      expect(result.toLowerCase()).to.eq(`data:application/json;base64,eyjuyw1lijogikxhvcbfegftcgxlie5gvcajmsisimrlc2nyaxb0aw9uijogilroaxmgaxmgyw4gzxhhbxbszsborlqilcjpbwfnzsi6icjodhrwczovl2lwznmubgvnaxrpbwf0zs50zwnol2lwznmvuw1aeehpoddxu0fcqumyu2g0sfdja1znvhdyclc0r3vwsey3zjzmbnnzrzvhvsisimfuaw1hdglvbl91cmwioiaiin0=`);
     });
   });
   describe('soulbound', async () => {
