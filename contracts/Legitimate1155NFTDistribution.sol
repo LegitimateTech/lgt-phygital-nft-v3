@@ -84,15 +84,11 @@ contract Legitimate1155NFTDistribution is ERC1155, AccessControl {
     // role for Legitimate to distribute NFTs
     bytes32 public constant NFT_MANAGER_ROLE = keccak256("NFT_MANAGER_USER");
 
-    constructor() ERC1155("https://metadata.legitimate.tech/example/{id}") {
+    constructor() ERC1155("") {
       // contract deployer is the admin by default
       _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
       _setupRole(NFT_MANAGER_ROLE, msg.sender);
       _setRoleAdmin(NFT_MANAGER_ROLE, DEFAULT_ADMIN_ROLE);
-    }
-
-    function setURI(string memory newuri) public onlyNftManager {
-        _setURI(newuri);
     }
 
     // ACCESS CONTROL
@@ -106,6 +102,27 @@ contract Legitimate1155NFTDistribution is ERC1155, AccessControl {
       _mint(to, tokenId, quantity, "");
     }
 
+    // SET NFT METADATA
+    function setNftTitle(string memory newTitle) public onlyNftManager {
+        nftTitle = newTitle;
+    }
+
+    function setNftDescription(string memory newDescription) public onlyNftManager {
+        nftDescription = newDescription;
+    }
+
+    function setNftAnimationUri(string memory newAnimationUri) public onlyNftManager {
+        nftAnimationUri = newAnimationUri;
+    }
+
+    function setNftImageUri(string memory newImageUri) public onlyNftManager {
+        nftImageUri = newImageUri;
+    }
+
+    function setIsNumbered(bool newIsNumbered) public onlyNftManager {
+        isNumbered = newIsNumbered;
+    }
+
     function setIsSoulbound(bool newIsSoulbound) public onlyNftManager {
         isSoulbound = newIsSoulbound;
     }
@@ -117,10 +134,6 @@ contract Legitimate1155NFTDistribution is ERC1155, AccessControl {
     returns (bool)
     {
         return super.supportsInterface(interfaceId);
-    }
-
-    function setIsNumbered(bool newIsNumbered) public onlyNftManager {
-        isNumbered = newIsNumbered;
     }
 
     // This generates the metadata on-chain for each NFT so metadata files do not need to be hosted
