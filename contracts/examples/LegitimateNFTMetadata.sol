@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Unlicense
-pragma solidity ^0.8.2;
+pragma solidity ^0.8.18;
 
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/Base64.sol";
@@ -40,11 +40,11 @@ abstract contract LegitimateNFTMetadata is NFTManagerAccessControl {
         string memory title = nftTitle;
 
         if (isNumbered) {
-          title = string(abi.encodePacked(nftTitle, " #", tokenId.toString()));
+          title = string.concat(nftTitle, " #", tokenId.toString());
         }
 
         // individual token metadata filename is just the numbered tokenId
-        bytes memory dataURI = abi.encodePacked(
+        string memory dataURI = string.concat(
             '{',
                 '"name": "', title, '",',
                 '"description": "', nftDescription, '",',
@@ -53,11 +53,9 @@ abstract contract LegitimateNFTMetadata is NFTManagerAccessControl {
             '}'
         );
 
-        return string(
-            abi.encodePacked(
+        return string.concat(
                 "data:application/json;base64,",
-                Base64.encode(dataURI)
-            )
+                string(Base64.encode(bytes(dataURI)))
         );
     }
 

@@ -10,7 +10,7 @@ const { INFURA_API_KEY, PRIVATE_KEY, ETHERSCAN_API_KEY, POLYGONSCAN_KEY, SNOWTRA
 
 const config: HardhatUserConfig = {
   solidity: {
-    version: "0.8.2",
+    version: "0.8.18",
     settings: {
       optimizer: {
         enabled: true,
