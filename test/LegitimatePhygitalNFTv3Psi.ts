@@ -15,6 +15,7 @@ const OWNABLE_CALLER_IS_NOT_STATUS_MANAGER = 'Caller does not have permission to
 const OWNABLE_CALLER_IS_NOT_APPROVED_NOR_OWNER = 'Locked721Psi: Caller is not approved nor owner'
 const TOKEN_NOT_UNLOCKED = 'Please unlock your NFT by tapping the LGT Tag before transferring.'
 const NONEXISTANT_TOKEN = 'ERC721: owner query for nonexistent token'
+const STARTING_TOKEN_ID = 1
 
 describe('LegitimatePhygitalNFTv3Psi', () => {
   let addr1: SignerWithAddress
@@ -133,7 +134,7 @@ describe('LegitimatePhygitalNFTv3Psi', () => {
       })
       it('emits an event with the right args', async () => {
         const startingSupply = await lgtNFT.totalSupply()
-        const expectedTokenId = startingSupply.toString()
+        const expectedTokenId = (Number(startingSupply) + STARTING_TOKEN_ID).toString()
         const tx = await lgtNFT['mint()']();
         const txReceipt = await tx.wait()
         const event = txReceipt.events?.find((ev: Event) => {
@@ -167,7 +168,7 @@ describe('LegitimatePhygitalNFTv3Psi', () => {
       })
       it('emits an event with the right args', async () => {
         const startingSupply = await lgtNFT.totalSupply()
-        const expectedTokenId = startingSupply.toString()
+        const expectedTokenId = (Number(startingSupply) + STARTING_TOKEN_ID).toString()
         const tx = await lgtNFT['mint(address)'](addr1.address);
         const txReceipt = await tx.wait()
         const event = txReceipt.events?.find((ev: Event) => {
