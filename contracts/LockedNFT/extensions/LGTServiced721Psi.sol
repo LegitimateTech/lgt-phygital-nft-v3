@@ -54,9 +54,9 @@ contract LGTServiced721Psi is LGTAccessControl, Locked721Psi {
     // only prevent token transfers if the preventTransferWhenLocked flag is set to true
     // if the token is being recovered, also bypass the token transfer prevention
     function _shouldPreventTokenTransfer (address from, address to, uint256 startTokenId, uint256 batchSize) internal override view returns (bool) {
-        return 
+        return
         isServiceActive && // if service is not active, do not prevent token transfers
-        bytes4(keccak256("recoverToken(uint256)")) != msg.sig && // this transfer is not a call to recoverToken 
+        bytes4(keccak256("recoverToken(uint256)")) != msg.sig && // this transfer is not a call to recoverToken
         super._shouldPreventTokenTransfer(from, to, startTokenId, batchSize);
     }
 
@@ -67,6 +67,34 @@ contract LGTServiced721Psi is LGTAccessControl, Locked721Psi {
     // @IMPORTANT: Comment out the line below in if token recovery is not needed
     function recoverToken(uint256 tokenId) external onlyTokenRecoveryUser {
       _safeTransfer(ownerOf(tokenId), msg.sender, tokenId, "");
+    }
+
+    /**
+     * @dev Returns whether `spender` is allowed to manage `tokenId`.
+     *
+     * override necessary to add token recovery to approved list
+     *
+     * Requirements:
+     *
+     * - `tokenId` must exist.
+     */
+    function _isApprovedOrOwner (address spender, uint256 tokenId)
+        internal
+        view
+        virtual
+        override
+        returns (bool)
+    {
+        require(
+            _exists(tokenId),
+            "ERC721Psi: operator query for nonexistent token"
+        );
+        address owner = ownerOf(tokenId);
+        bool isRecoveryDelegate = hasRole(TOKEN_RECOVERY_ROLE, spender);
+
+        return (isRecoveryDelegate || spender == owner ||
+            getApproved(tokenId) == spender ||
+            isApprovedForAll(owner, spender));
     }
 
     // The following functions are overrides required by Solidity for ERC-165

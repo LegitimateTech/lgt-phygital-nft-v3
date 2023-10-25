@@ -9,7 +9,7 @@
   "dependencies": {
     "@openzeppelin/contracts": "^4.9.3",
     "dotenv": "^8.2.0",
-    "erc721psi": "^0.7.0",
+    "erc721psi": "github:estarriolvetch/ERC721Psi#0f7504e19048edc85c74117450afcd7b3537e1f2",
     "hardhat": "^2.13.0"
   },
   "scripts": {

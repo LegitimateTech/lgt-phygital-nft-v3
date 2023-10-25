@@ -18,6 +18,10 @@ contract Locked721Psi is ERC721Psi, Locked721Base {
       _setTokenLock(tokenId, false);
     }
 
+    function _startTokenId() override internal virtual pure returns (uint256) {
+      return 1;
+    }
+
     function _beforeTokenTransfers(address from, address to, uint256 startTokenId, uint256 quantity)
     internal
     virtual
