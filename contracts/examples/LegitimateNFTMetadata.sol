@@ -9,10 +9,10 @@ abstract contract LegitimateNFTMetadata is NFTManagerAccessControl {
     using Strings for uint256;
 
     // METADATA
-    string public nftTitle = "LGT Example NFT"; // Title of the NFT collection
-    string public nftDescription = "This is an example NFT"; // Description in string or markdown format
+    string public nftTitle = ""; // Title of the NFT collection
+    string public nftDescription = ""; // Description in string or markdown format
     string public nftAnimationUri = ""; // IPFS or HTTP URL
-    string public nftImageUri = "https://ipfs.legitimate.tech/ipfs/QmZxHi87WSABAC2Sh4HWckVgTwXrW4GuVHF7f6LnssG5GU"; // IPFS or HTTP URL
+    string public nftImageUri = ""; // IPFS or HTTP URL
     bool public isNumbered = true; // displays the number in the title of the NFT
 
     // SET NFT METADATA
