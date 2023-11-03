@@ -51,8 +51,9 @@ describe('LegitimatePhygitalNFTv3', () => {
     // redeploy contract to reset state
     //console.log('afterEach: redeploying contract');
     const LGTNFT = await ethers.getContractFactory("LegitimatePhygitalNFTv3");
-    lgtNFT = await LGTNFT.deploy();
+    lgtNFT = await LGTNFT.deploy('LGTPhygitalNFTv3Example', 'LGTNFTv3Example');
     await lgtNFT.deployed();
+    await lgtNFT.setBaseURI("https://metadata.legitimate.tech/example")
     tokenId1 = await mintToken(addr1.address)
     tokenId2 = await mintToken(addr2.address)
     initialSupply = (await lgtNFT.totalSupply())
@@ -307,7 +308,7 @@ describe('LegitimatePhygitalNFTv3', () => {
 
       //SUCCESS
       expect(result.toLowerCase()).to.eq(`https://metadata.legitimate.tech/example/${tokenId1}`);
-      expect(result2.toLowerCase()).to.eq(`https://metadata.legitimate.tech/example/${tokenId2}}`);
+      expect(result2.toLowerCase()).to.eq(`https://metadata.legitimate.tech/example/${tokenId2}`);
     });
     it('sets new base uri and returns new metadata uri', async () => {
       await lgtNFT.setBaseURI("https://somethingelse.com")
@@ -316,7 +317,7 @@ describe('LegitimatePhygitalNFTv3', () => {
 
       //SUCCESS
       expect(result.toLowerCase()).to.eq(`https://somethingelse.com/${tokenId1}`);
-      expect(result2.toLowerCase()).to.eq(`https://somethingelse.com/${tokenId2}}`);
+      expect(result2.toLowerCase()).to.eq(`https://somethingelse.com/${tokenId2}`);
     });
   })
 
