@@ -16,9 +16,12 @@ describe('Legitimate721NFTDistribution', () => {
 
   before(async () => {
     const LGTNFT = await ethers.getContractFactory("Legitimate721NFTDistribution");
-    lgtNFT = await LGTNFT.deploy();
+    lgtNFT = await LGTNFT.deploy('LGT721NFTDistributionExample', 'LGT721Distribution');
     contractAddress = lgtNFT.address.toLowerCase()
     await lgtNFT.deployed();
+    await lgtNFT.setNftTitle('LGT Example NFT');
+    await lgtNFT.setNftDescription('This is an example NFT');
+    await lgtNFT.setNftImageUri('https://ipfs.legitimate.tech/ipfs/QmZxHi87WSABAC2Sh4HWckVgTwXrW4GuVHF7f6LnssG5GU')
     deployerAddress = await getDeployerAddress()
     const signers = await ethers.getSigners()
     addr1 = signers[1]

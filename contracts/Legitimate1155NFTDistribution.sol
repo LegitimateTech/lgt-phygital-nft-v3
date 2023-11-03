@@ -14,13 +14,13 @@ contract Legitimate1155NFTDistribution is ERC1155, AccessControl {
 
     // for OpenSea unidentified contract
     // https://stackoverflow.com/questions/68891144/how-to-fix-unidentified-contract-opensea-is-unable-to-understand-erc1155
-    string public name = "LGT 1155 Token Example";
+    string public name = "";
 
     // METADATA
-    string public nftTitle = "LGT Example NFT"; // Title of the NFT collection
-    string public nftDescription = "This is an example NFT"; // Description in string or markdown format
+    string public nftTitle = ""; // Title of the NFT collection
+    string public nftDescription = ""; // Description in string or markdown format
     string public nftAnimationUri = ""; // IPFS or HTTP URL
-    string public nftImageUri = "https://ipfs.legitimate.tech/ipfs/QmZxHi87WSABAC2Sh4HWckVgTwXrW4GuVHF7f6LnssG5GU"; // IPFS or HTTP URL
+    string public nftImageUri = ""; // IPFS or HTTP URL
     bool public isNumbered = true; // displays the number in the title of the NFT
     bool public isSoulbound = true; // NFTs cannot be transferred once they are claimed
 
@@ -84,7 +84,8 @@ contract Legitimate1155NFTDistribution is ERC1155, AccessControl {
     // role for Legitimate to distribute NFTs
     bytes32 public constant NFT_MANAGER_ROLE = keccak256("NFT_MANAGER_USER");
 
-    constructor() ERC1155("") {
+    constructor(string memory name_) ERC1155("") {
+      name = name_;
       // contract deployer is the admin by default
       _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
       _setupRole(NFT_MANAGER_ROLE, msg.sender);

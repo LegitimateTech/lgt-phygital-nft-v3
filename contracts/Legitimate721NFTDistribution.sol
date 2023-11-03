@@ -14,14 +14,14 @@ contract Legitimate721NFTDistribution is ERC721Psi, AccessControl {
     bytes32 public constant NFT_MANAGER_ROLE = keccak256("NFT_MANAGER_USER");
 
     // METADATA
-    string public nftTitle = "LGT Example NFT"; // Title of the NFT collection
-    string public nftDescription = "This is an example NFT"; // Description in string or markdown format
+    string public nftTitle = ""; // Title of the NFT collection
+    string public nftDescription = ""; // Description in string or markdown format
     string public nftAnimationUri = ""; // IPFS or HTTP URL
-    string public nftImageUri = "https://ipfs.legitimate.tech/ipfs/QmZxHi87WSABAC2Sh4HWckVgTwXrW4GuVHF7f6LnssG5GU"; // IPFS or HTTP URL
+    string public nftImageUri = ""; // IPFS or HTTP URL
     bool public isNumbered = true; // displays the number in the title of the NFT
     bool public isSoulbound = true; // NFTs cannot be transferred once they are claimed
 
-    constructor() ERC721Psi("LGT721NFTDistributionExample", "LGT721Distribution") {
+    constructor(string memory name_, string memory symbol_) ERC721Psi(name_, symbol_) {
       // contract deployer is the admin by default
       _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
       _setupRole(NFT_MANAGER_ROLE, msg.sender);
