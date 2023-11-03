@@ -8,10 +8,9 @@ contract LegitimatePhygitalNFTv3Psi is LGTServiced721Psi {
     using Strings for uint256;
 
     // METADATA
-    string public baseURI = "https://metadata.legitimate.tech/example";
+    string public baseURI = "";
 
-    constructor() LGTServiced721Psi("LGTPhygitalNFTv3Example", "LGTNFTv3Example") {
-    }
+    constructor(string memory name_, string memory symbol_) LGTServiced721Psi(name_, symbol_) {}
 
     function _baseURI() internal view override returns (string memory) {
         return baseURI;

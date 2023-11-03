@@ -11,10 +11,9 @@ contract LegitimatePhygitalNFTv3 is LGTServiced721, LGTNFTRoyalty, ERC721Burnabl
     using Strings for uint256;
 
     // METADATA
-    string public baseURI = "https://metadata.legitimate.tech/example";
+    string public baseURI = "";
 
-    constructor() LGTServiced721("LGTPhygitalNFTv3Example", "LGTNFTv3Example") {
-    }
+    constructor(string memory name_, string memory symbol_) LGTServiced721(name_, symbol_) {}
 
     function _baseURI() internal view override returns (string memory) {
         return baseURI;
@@ -32,14 +31,7 @@ contract LegitimatePhygitalNFTv3 is LGTServiced721, LGTNFTRoyalty, ERC721Burnabl
         require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
 
         // individual token metadata filename is just the numbered tokenId
-        string memory baseTokenUri = string(abi.encodePacked(baseURI, "/", tokenId.toString()));
-
-        // the contract shares a single locked metadata file, filename is `locked`
-        if (tokenLock[tokenId]) {
-          return string(abi.encodePacked(baseURI, "/locked"));
-        }
-
-        return baseTokenUri;
+        return string(abi.encodePacked(baseURI, "/", tokenId.toString()));
     }
 
     // The following functions are overrides required by Solidity for ERC-165

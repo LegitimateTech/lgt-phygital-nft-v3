@@ -51,8 +51,9 @@ describe('LegitimatePhygitalNFTv3Psi', () => {
     // redeploy contract to reset state
     //console.log('afterEach: redeploying contract');
     const LGTNFT = await ethers.getContractFactory("LegitimatePhygitalNFTv3Psi");
-    lgtNFT = await LGTNFT.deploy();
+    lgtNFT = await LGTNFT.deploy('LGTPhygitalNFTv3Example', 'LGTNFTv3Example');
     await lgtNFT.deployed();
+    await lgtNFT.setBaseURI("https://metadata.legitimate.tech/example")
     tokenId1 = await mintToken(addr1.address)
     tokenId2 = await mintToken(addr2.address)
     initialSupply = (await lgtNFT.totalSupply())
