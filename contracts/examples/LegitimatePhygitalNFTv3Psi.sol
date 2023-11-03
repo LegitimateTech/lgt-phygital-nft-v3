@@ -31,10 +31,10 @@ contract LegitimatePhygitalNFTv3Psi is LGTServiced721Psi {
         // individual token metadata filename is just the numbered tokenId
         string memory baseTokenUri = string(abi.encodePacked(baseURI, "/", tokenId.toString()));
 
-        // the contract shares a single locked metadata file, filename is `locked`
-        if (tokenLock[tokenId]) {
-          return string(abi.encodePacked(baseURI, "/locked"));
-        }
+        // optional: the contract shares a single locked metadata file, filename is `locked`
+        // if (tokenLock[tokenId]) {
+        //   return string(abi.encodePacked(baseURI, "/locked"));
+        // }
 
         return baseTokenUri;
     }
