@@ -339,8 +339,8 @@ describe('LegitimatePhygitalNFTv3Psi', () => {
       const result2 = await lgtNFT.tokenURI(tokenId2);
 
       //SUCCESS
-      expect(result.toLowerCase()).to.eq(`https://metadata.legitimate.tech/example/locked`);
-      expect(result2.toLowerCase()).to.eq(`https://metadata.legitimate.tech/example/locked`);
+      expect(result.toLowerCase()).to.eq(`https://metadata.legitimate.tech/example/${tokenId1}`);
+      expect(result2.toLowerCase()).to.eq(`https://metadata.legitimate.tech/example/${tokenId2}`);
     });
     it('sets new base uri and returns new metadata uri', async () => {
       await lgtNFT.setBaseURI("https://somethingelse.com")
@@ -348,8 +348,8 @@ describe('LegitimatePhygitalNFTv3Psi', () => {
       const result2 = await lgtNFT.tokenURI(tokenId2);
 
       //SUCCESS
-      expect(result.toLowerCase()).to.eq(`https://somethingelse.com/locked`);
-      expect(result2.toLowerCase()).to.eq(`https://somethingelse.com/locked`);
+      expect(result.toLowerCase()).to.eq(`https://somethingelse.com/${tokenId1}`);
+      expect(result2.toLowerCase()).to.eq(`https://somethingelse.com/${tokenId2}`);
     });
   })
 
