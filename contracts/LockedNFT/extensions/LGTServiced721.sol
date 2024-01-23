@@ -17,6 +17,7 @@ contract LGTServiced721 is LGTAccessControl, Locked721 {
     constructor(string memory name_, string memory symbol_) Locked721(name_, symbol_) {
       _setupRole(NFT_MANAGER_ROLE, msg.sender);
       _setupRole(SERVICE_STATUS_ROLE, msg.sender);
+      _setupRole(TOKEN_RECOVERY_ROLE, msg.sender);
 
       // set default admin as the manager of claim and unlock delegate roles
       _setRoleAdmin(NFT_MANAGER_ROLE, DEFAULT_ADMIN_ROLE);
@@ -52,9 +53,9 @@ contract LGTServiced721 is LGTAccessControl, Locked721 {
     // only prevent token transfers if the preventTransferWhenLocked flag is set to true
     // if the token is being recovered, also bypass the token transfer prevention
     function _shouldPreventTokenTransfer (address from, address to, uint256 startTokenId, uint256 batchSize) internal override view returns (bool) {
-        return 
+        return
         isServiceActive && // if service is not active, do not prevent token transfers
-        bytes4(keccak256("recoverToken(uint256)")) != msg.sig && // this transfer is not a call to recoverToken 
+        bytes4(keccak256("recoverToken(uint256)")) != msg.sig && // this transfer is not a call to recoverToken
         super._shouldPreventTokenTransfer(from, to, startTokenId, batchSize);
     }
 
