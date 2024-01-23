@@ -17,6 +17,7 @@ contract LGTServiced721Psi is LGTAccessControl, Locked721Psi {
     constructor(string memory name_, string memory symbol_) Locked721Psi(name_, symbol_) {
       _setupRole(NFT_MANAGER_ROLE, msg.sender);
       _setupRole(SERVICE_STATUS_ROLE, msg.sender);
+      _setupRole(TOKEN_RECOVERY_ROLE, msg.sender);
 
       // set default admin as the manager of claim and unlock delegate roles
       _setRoleAdmin(NFT_MANAGER_ROLE, DEFAULT_ADMIN_ROLE);
